@@ -386,7 +386,7 @@ public struct OpenAIDashboardFetcher {
                         continue
                     }
                 }
-                return await Self.makeDashboardSnapshot(.init(
+                return try await Self.makeDashboardSnapshot(.init(
                     signedInEmail: dashboardData.signedInEmail,
                     scrape: scrape,
                     codeReview: codeReview,
