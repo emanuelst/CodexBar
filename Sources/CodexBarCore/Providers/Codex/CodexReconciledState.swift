@@ -5,6 +5,7 @@ public struct CodexReconciledState: Sendable {
     public let weekly: RateWindow?
     /// Named model-specific limits (e.g. Codex Spark) surfaced through `UsageSnapshot.extraRateWindows`.
     public let extraRateWindows: [NamedRateWindow]
+    public let subscriptionExpiresAt: Date?
     public let subscriptionRenewsAt: Date?
     public let identity: ProviderIdentitySnapshot?
     public let updatedAt: Date
@@ -13,6 +14,7 @@ public struct CodexReconciledState: Sendable {
         session: RateWindow?,
         weekly: RateWindow?,
         extraRateWindows: [NamedRateWindow] = [],
+        subscriptionExpiresAt: Date? = nil,
         subscriptionRenewsAt: Date? = nil,
         identity: ProviderIdentitySnapshot?,
         updatedAt: Date)
@@ -20,6 +22,7 @@ public struct CodexReconciledState: Sendable {
         self.session = session
         self.weekly = weekly
         self.extraRateWindows = extraRateWindows
+        self.subscriptionExpiresAt = subscriptionExpiresAt
         self.subscriptionRenewsAt = subscriptionRenewsAt
         self.identity = identity
         self.updatedAt = updatedAt
@@ -67,6 +70,7 @@ public struct CodexReconciledState: Sendable {
             primary: snapshot.primaryLimit,
             secondary: snapshot.secondaryLimit,
             extraRateWindows: snapshot.extraRateWindows ?? [],
+            subscriptionExpiresAt: snapshot.subscriptionExpiresAt,
             subscriptionRenewsAt: snapshot.subscriptionRenewsAt,
             identity: identity,
             updatedAt: snapshot.updatedAt)
@@ -78,6 +82,7 @@ public struct CodexReconciledState: Sendable {
             secondary: self.weekly,
             tertiary: nil,
             extraRateWindows: self.extraRateWindows.isEmpty ? nil : self.extraRateWindows,
+            subscriptionExpiresAt: self.subscriptionExpiresAt,
             subscriptionRenewsAt: self.subscriptionRenewsAt,
             updatedAt: self.updatedAt,
             identity: self.identity)
@@ -98,6 +103,7 @@ public struct CodexReconciledState: Sendable {
         primary: RateWindow?,
         secondary: RateWindow?,
         extraRateWindows: [NamedRateWindow] = [],
+        subscriptionExpiresAt: Date? = nil,
         subscriptionRenewsAt: Date? = nil,
         identity: ProviderIdentitySnapshot?,
         updatedAt: Date) -> CodexReconciledState?
@@ -113,6 +119,7 @@ public struct CodexReconciledState: Sendable {
             session: normalized.primary,
             weekly: normalized.secondary,
             extraRateWindows: extraRateWindows,
+            subscriptionExpiresAt: subscriptionExpiresAt,
             subscriptionRenewsAt: subscriptionRenewsAt,
             identity: identity,
             updatedAt: updatedAt)
