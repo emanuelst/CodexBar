@@ -28,6 +28,15 @@ extension UsageStore {
             return transition.snapshot
         }
         if let snapshot = self.snapshots[provider] {
+            if provider == .codex,
+               self.openAIDashboardAttachmentAuthorized,
+               let dashboard = self.openAIDashboard,
+               dashboard.subscriptionRenewsAt != nil || dashboard.subscriptionExpiresAt != nil
+            {
+                return snapshot.withSubscriptionMetadata(
+                    expiresAt: dashboard.subscriptionExpiresAt,
+                    renewsAt: dashboard.subscriptionRenewsAt)
+            }
             return snapshot
         }
         guard provider == .deepseek, self.refreshingProviders.contains(provider) else { return nil }
