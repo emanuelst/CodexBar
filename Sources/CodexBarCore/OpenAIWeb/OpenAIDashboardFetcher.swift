@@ -57,6 +57,7 @@ public struct OpenAIDashboardFetcher {
         let creditsRemaining: Double?
         let codexCreditLimit: CodexCreditLimitSnapshot?
         let accountPlan: String?
+        let subscriptionRenewsAt: Date?
     }
 
     private struct DashboardScrapeData {
@@ -92,6 +93,7 @@ public struct OpenAIDashboardFetcher {
             creditsRemaining: components.creditsRemaining,
             codexCreditLimit: components.codexCreditLimit,
             accountPlan: components.accountPlan,
+            subscriptionRenewsAt: components.subscriptionRenewsAt,
             updatedAt: Date())
     }
 
@@ -383,7 +385,7 @@ public struct OpenAIDashboardFetcher {
                         continue
                     }
                 }
-                return Self.makeDashboardSnapshot(.init(
+                return await Self.makeDashboardSnapshot(.init(
                     signedInEmail: dashboardData.signedInEmail,
                     scrape: scrape,
                     codeReview: codeReview,
@@ -395,7 +397,8 @@ public struct OpenAIDashboardFetcher {
                     extraRateWindows: dashboardData.extraRateWindows,
                     creditsRemaining: dashboardData.creditsRemaining,
                     codexCreditLimit: dashboardData.codexCreditLimit,
-                    accountPlan: dashboardData.accountPlan))
+                    accountPlan: dashboardData.accountPlan,
+                    subscriptionRenewsAt: OpenAIBilling.fetch(webView, deadline: deadline, logger: log)))
             }
 
             try await Self.sleepForDashboardPoll(.milliseconds(500))

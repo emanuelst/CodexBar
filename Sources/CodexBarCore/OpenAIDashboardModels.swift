@@ -19,6 +19,7 @@ public struct OpenAIDashboardSnapshot: Codable, Equatable, Sendable {
     public let creditsRemaining: Double?
     public let codexCreditLimit: CodexCreditLimitSnapshot?
     public let accountPlan: String?
+    public let subscriptionRenewsAt: Date?
     public let updatedAt: Date
 
     public init(
@@ -35,6 +36,7 @@ public struct OpenAIDashboardSnapshot: Codable, Equatable, Sendable {
         creditsRemaining: Double? = nil,
         codexCreditLimit: CodexCreditLimitSnapshot? = nil,
         accountPlan: String? = nil,
+        subscriptionRenewsAt: Date? = nil,
         updatedAt: Date)
     {
         self.signedInEmail = signedInEmail
@@ -50,6 +52,7 @@ public struct OpenAIDashboardSnapshot: Codable, Equatable, Sendable {
         self.creditsRemaining = creditsRemaining
         self.codexCreditLimit = codexCreditLimit
         self.accountPlan = accountPlan
+        self.subscriptionRenewsAt = subscriptionRenewsAt
         self.updatedAt = updatedAt
     }
 
@@ -67,6 +70,7 @@ public struct OpenAIDashboardSnapshot: Codable, Equatable, Sendable {
         case creditsRemaining
         case codexCreditLimit
         case accountPlan
+        case subscriptionRenewsAt
         case updatedAt
     }
 
@@ -97,6 +101,7 @@ public struct OpenAIDashboardSnapshot: Codable, Equatable, Sendable {
         self.creditsRemaining = try container.decodeIfPresent(Double.self, forKey: .creditsRemaining)
         self.codexCreditLimit = try container.decodeIfPresent(CodexCreditLimitSnapshot.self, forKey: .codexCreditLimit)
         self.accountPlan = try container.decodeIfPresent(String.self, forKey: .accountPlan)
+        self.subscriptionRenewsAt = try container.decodeIfPresent(Date.self, forKey: .subscriptionRenewsAt)
         self.updatedAt = try container.decode(Date.self, forKey: .updatedAt)
     }
 
