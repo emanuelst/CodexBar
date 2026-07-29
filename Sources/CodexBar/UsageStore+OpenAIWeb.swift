@@ -255,9 +255,7 @@ extension UsageStore {
             self.lastOpenAIDashboardError = nil
             self.openAIDashboardRequiresLogin = false
 
-            if let currentUsage = self.snapshots[.codex],
-               dashboard.subscriptionRenewsAt != nil || dashboard.subscriptionExpiresAt != nil
-            {
+            if let currentUsage = self.snapshots[.codex] {
                 self.snapshots[.codex] = currentUsage.withSubscriptionMetadata(
                     expiresAt: dashboard.subscriptionExpiresAt,
                     renewsAt: dashboard.subscriptionRenewsAt)

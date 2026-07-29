@@ -98,5 +98,23 @@ extension CodexManagedOpenAIWebTests {
         #expect(presentedUsage.updatedAt == refreshedUsage.updatedAt)
         #expect(presentedUsage.subscriptionRenewsAt == renewal)
         #expect(store.snapshots[.codex]?.subscriptionRenewsAt == nil)
+
+        store.snapshots[.codex] = mergedUsage
+        await store.applyOpenAIDashboard(
+            OpenAIDashboardSnapshot(
+                signedInEmail: managedAccount.email,
+                codeReviewRemainingPercent: 90,
+                creditEvents: [],
+                dailyBreakdown: [],
+                usageBreakdown: [],
+                creditsPurchaseURL: nil,
+                creditsRemaining: 10,
+                accountPlan: "Pro",
+                updatedAt: Date()),
+            targetEmail: managedAccount.email)
+
+        let clearedUsage = try #require(store.snapshots[.codex])
+        #expect(clearedUsage.subscriptionRenewsAt == nil)
+        #expect(clearedUsage.subscriptionExpiresAt == nil)
     }
 }
