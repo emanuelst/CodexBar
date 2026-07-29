@@ -606,6 +606,7 @@ struct UsageMenuCardHeaderSectionView: View {
 private struct UsageMenuCardUsageContentView: View {
     let model: UsageMenuCardView.Model
     let showBottomDivider: Bool
+    var showsSectionDividers = true
     @Environment(\.menuItemHighlighted) private var isHighlighted
 
     /// Doubao ships Coding Plan and Agent Plan subscriptions, each with personal
@@ -645,7 +646,7 @@ private struct UsageMenuCardUsageContentView: View {
                     self.groupHeader("Coding Plan")
                     self.metricRows(split.coding)
                 }
-                if !split.coding.isEmpty {
+                if !split.coding.isEmpty, self.showsSectionDividers {
                     Divider()
                 }
                 self.groupHeader("Agent Plan")
@@ -654,7 +655,7 @@ private struct UsageMenuCardUsageContentView: View {
                 self.metricRows(self.model.metrics)
             }
             if let resetCredits = self.model.codexResetCredits {
-                if !self.model.metrics.isEmpty {
+                if !self.model.metrics.isEmpty, self.showsSectionDividers {
                     Divider()
                 }
                 CodexResetCreditsContent(presentation: resetCredits)
@@ -685,11 +686,15 @@ struct UsageMenuCardUsageSectionView: View {
     let showBottomDivider: Bool
     let bottomPadding: CGFloat
     let width: CGFloat
+    var showsSectionDividers = true
     @Environment(\.menuCardRefreshMonitor) private var refreshMonitor
 
     var body: some View {
         let liveModel = self.liveModel
-        UsageMenuCardUsageContentView(model: liveModel, showBottomDivider: self.showBottomDivider)
+        UsageMenuCardUsageContentView(
+            model: liveModel,
+            showBottomDivider: self.showBottomDivider,
+            showsSectionDividers: self.showsSectionDividers)
             .padding(.horizontal, UsageMenuCardLayout.horizontalPadding)
             .padding(.top, UsageMenuCardLayout.usageSectionTopPadding)
             .padding(.bottom, self.bottomPadding)
@@ -894,7 +899,8 @@ extension UsageMenuCardView.Model {
                 metadata: input.metadata,
                 snapshot: input.snapshot,
                 credits: input.credits,
-                error: input.creditsError)
+                error: input.creditsError,
+                preferredCurrencyCode: input.preferredCurrencyCode)
         }
         let creditsText = PersonalInfoRedactor.redactEmails(in: rawCreditsText, isEnabled: input.hidePersonalInfo)
         let creditsProgressPercent = Self.creditsProgressPercent(credits: input.credits)
@@ -910,7 +916,9 @@ extension UsageMenuCardView.Model {
             !input.showOptionalCreditsAndExtraUsage
         let providerCost: ProviderCostSection? = if input.provider == .sakana {
             input.showOptionalCreditsAndExtraUsage
-                ? Self.sakanaPayAsYouGoSection(input.snapshot?.sakanaPayAsYouGo)
+                ? Self.sakanaPayAsYouGoSection(
+                    input.snapshot?.sakanaPayAsYouGo,
+                    preferredCurrencyCode: input.preferredCurrencyCode)
                 : nil
         } else if hidesOptionalProviderCost ||
             (input.provider == .openai && openAIAPIUsage != nil)
@@ -920,7 +928,8 @@ extension UsageMenuCardView.Model {
             Self.providerCostSection(
                 provider: input.provider,
                 cost: input.snapshot?.providerCost,
-                isClaudeAdminAPI: isClaudeAdminAPI)
+                isClaudeAdminAPI: isClaudeAdminAPI,
+                preferredCurrencyCode: input.preferredCurrencyCode)
         }
         let tokenUsageSnapshot = Self.tokenUsageSnapshot(input: input)
         let tokenUsage = Self.tokenUsageSection(
@@ -928,7 +937,8 @@ extension UsageMenuCardView.Model {
             enabled: input.tokenCostMenuSectionEnabled,
             comparisonPeriodsEnabled: input.costComparisonPeriodsEnabled,
             snapshot: tokenUsageSnapshot,
-            error: input.tokenError)
+            error: input.tokenError,
+            preferredCurrencyCode: input.preferredCurrencyCode)
         let subtitle = Self.subtitle(
             snapshot: input.snapshot,
             isRefreshing: input.isRefreshing,
@@ -1172,7 +1182,10 @@ extension UsageMenuCardView.Model {
         let zaiTokenDetail = Self.zaiLimitDetailText(limit: zaiUsage?.tokenLimit)
         let zaiTimeDetail = Self.zaiLimitDetailText(limit: zaiUsage?.timeLimit)
         let zaiSessionDetail = Self.zaiLimitDetailText(limit: zaiUsage?.sessionTokenLimit)
-        let openRouterQuotaDetail = Self.openRouterQuotaDetail(provider: input.provider, snapshot: snapshot)
+        let openRouterQuotaDetail = Self.openRouterQuotaDetail(
+            provider: input.provider,
+            snapshot: snapshot,
+            preferredCurrencyCode: input.preferredCurrencyCode)
         let labels = Self.rateWindowLabels(input: input, snapshot: snapshot)
         if input.provider == .mistral, let credits = snapshot.mistralUsage?.credits {
             metrics.append(Metric(
