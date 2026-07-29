@@ -32,10 +32,22 @@ extension StatusItemController {
         }
         // Override cards belong to a specific account/context. Never fall back to
         // provider-level live data here; that can belong to a different account.
-        let snapshot: UsageSnapshot? = if surface == .overrideCard {
+        var snapshot: UsageSnapshot? = if surface == .overrideCard {
             snapshotOverride
         } else {
             snapshotOverride ?? self.store.presentationSnapshot(for: target)
+        }
+        if target == .codex, surface == .liveCard,
+           let cache = OpenAIDashboardCacheStore.load(),
+           cache.snapshot.subscriptionRenewsAt != nil || cache.snapshot.subscriptionExpiresAt != nil,
+           let cacheEmail = CodexIdentityResolver.normalizeEmail(cache.accountEmail),
+           let currentEmail = CodexIdentityResolver.normalizeEmail(
+               snapshot?.accountEmail(for: .codex) ?? self.store.accountInfo(for: .codex).email),
+           cacheEmail == currentEmail
+        {
+            snapshot = snapshot?.withSubscriptionMetadata(
+                expiresAt: cache.snapshot.subscriptionExpiresAt,
+                renewsAt: cache.snapshot.subscriptionRenewsAt)
         }
         let projectedTokenSnapshot = self.store.tokenSnapshot(fromProviderSnapshot: snapshot, provider: target)
         let storedTokenSnapshot = UsageStore.tokenCostRequiresProviderSnapshot(target)
