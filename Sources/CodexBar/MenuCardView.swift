@@ -136,6 +136,7 @@ struct UsageMenuCardView: View {
         let planText: String?
         let metrics: [Metric]
         let usageNotes: [String]
+        var subscriptionNotes: [String] = []
         let openAIAPIUsage: OpenAIAPIUsageSnapshot?
         let inlineUsageDashboard: InlineUsageDashboardModel?
         let creditsText: String?
@@ -180,10 +181,9 @@ struct UsageMenuCardView: View {
             if !liveModel.usesStackedDetailLayout {
                 if let dashboard = liveModel.inlineUsageDashboard {
                     InlineUsageDashboardContent(model: dashboard)
-                }
-                if !liveModel.usageNotes.isEmpty {
+                } else if !liveModel.usageNotes.isEmpty {
                     UsageNotesContent(notes: liveModel.usageNotes)
-                } else if liveModel.inlineUsageDashboard == nil, let placeholder = liveModel.placeholder {
+                } else if let placeholder = liveModel.placeholder {
                     // Non-stacked placeholders are standalone detail rows; stacked usage placeholders are gated below.
                     Text(placeholder)
                         .foregroundStyle(MenuHighlightStyle.secondary(self.isHighlighted))
@@ -661,11 +661,12 @@ private struct UsageMenuCardUsageContentView: View {
             }
             if let dashboard = self.model.inlineUsageDashboard {
                 InlineUsageDashboardContent(model: dashboard)
-            }
-            if !self.model.usageNotes.isEmpty {
+                if !self.model.subscriptionNotes.isEmpty {
+                    UsageNotesContent(notes: self.model.subscriptionNotes)
+                }
+            } else if !self.model.usageNotes.isEmpty {
                 UsageNotesContent(notes: self.model.usageNotes)
-            } else if self.model.inlineUsageDashboard == nil,
-                      let placeholder = self.model.placeholder, self.model.metrics.isEmpty,
+            } else if let placeholder = self.model.placeholder, self.model.metrics.isEmpty,
                       self.model.codexResetCredits == nil
             {
                 Text(placeholder)
@@ -946,6 +947,7 @@ extension UsageMenuCardView.Model {
             planText: planText,
             metrics: metrics,
             usageNotes: usageNotes,
+            subscriptionNotes: Self.subscriptionMetadataNotes(snapshot: input.snapshot, provider: input.provider),
             openAIAPIUsage: openAIAPIUsage,
             inlineUsageDashboard: inlineUsageDashboard,
             creditsText: creditsText,
