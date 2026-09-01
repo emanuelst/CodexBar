@@ -12,6 +12,9 @@ public enum CodexDashboardDisposition: String, Codable, Sendable {
 }
 
 public enum CodexDashboardAllowedEffect: String, Codable, CaseIterable, Hashable, Sendable {
+    /// Subscription dates are safe to merge into an already trusted usage snapshot when the
+    /// dashboard email matches, even if other dashboard effects remain display-only.
+    case subscriptionMetadataAttachment
     case usageBackfill
     case creditsAttachment
     case refreshGuardSeed
@@ -315,11 +318,15 @@ public enum CodexDashboardAuthority {
         disposition: CodexDashboardDisposition,
         sourceKind: CodexDashboardSourceKind) -> Set<CodexDashboardAllowedEffect>
     {
+        if disposition == .displayOnly, sourceKind == .liveWeb {
+            return [.subscriptionMetadataAttachment]
+        }
         guard disposition == .attach else { return [] }
 
         switch sourceKind {
         case .liveWeb:
             return [
+                .subscriptionMetadataAttachment,
                 .usageBackfill,
                 .creditsAttachment,
                 .refreshGuardSeed,

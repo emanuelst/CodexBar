@@ -109,7 +109,10 @@ enum OpenAISubscription {
                       willRenew: raw["willRenew"] as? Bool)
             else { continue }
 
-            logger("subscription metadata found")
+            logger(
+                "subscription metadata found " +
+                    "renewal=\(metadata.renewsAt == nil ? "0" : "1") " +
+                    "expiration=\(metadata.expiresAt == nil ? "0" : "1")")
             return metadata
         }
 
