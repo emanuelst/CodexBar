@@ -50,15 +50,13 @@ extension OpenAIDashboardFetcher {
         var usageBreakdownErrorFirstSeenAt: Date?
         var lastUsageBreakdownError: String?
 
-        if subscriptionResult.metadata == nil {
+        if !subscriptionResult.succeeded {
             log("subscription metadata fallback start")
             let capturedResult = try? await OpenAISubscription.fetch(
                 webView,
                 deadline: min(deadline, Date().addingTimeInterval(10)),
                 logger: log)
-            if let capturedResult,
-               capturedResult.succeeded || !subscriptionResult.succeeded
-            {
+            if let capturedResult {
                 subscriptionResult = capturedResult
             }
         }
