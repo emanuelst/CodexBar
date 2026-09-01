@@ -258,9 +258,15 @@ extension UsageStore {
 
             // Provider-specific by design: an authorized OpenAI dashboard attaches metadata/backfill to Codex usage.
             if let currentUsage = self.snapshots[.codex] {
-                self.snapshots[.codex] = currentUsage.withSubscriptionMetadata(
+                let updatedUsage = currentUsage.withSubscriptionMetadata(
                     expiresAt: dashboard.subscriptionExpiresAt,
                     renewsAt: dashboard.subscriptionRenewsAt)
+                self.snapshots[.codex] = updatedUsage
+                if updatedUsage.subscriptionExpiresAt != currentUsage.subscriptionExpiresAt ||
+                    updatedUsage.subscriptionRenewsAt != currentUsage.subscriptionRenewsAt
+                {
+                    self.persistWidgetSnapshot(reason: "dashboard-subscription-metadata")
+                }
             }
 
             if decision.allowedEffects.contains(.usageBackfill),
@@ -315,6 +321,27 @@ extension UsageStore {
             self.lastOpenAIDashboardAttachmentAuthorized = false
             self.lastOpenAIDashboardError = nil
             self.openAIDashboardRequiresLogin = false
+
+            // Subscription metadata is scoped by the verified dashboard email. It can be
+            // merged into the current Codex usage snapshot without attaching the dashboard's
+            // usage, credits, or refresh state when account identity is otherwise ambiguous.
+            if decision.allowedEffects.contains(.subscriptionMetadataAttachment),
+               let currentUsage = self.snapshots[.codex],
+               let dashboardEmail = CodexIdentityResolver.normalizeEmail(dashboard.signedInEmail),
+               let currentEmail = CodexIdentityResolver.normalizeEmail(
+                   currentUsage.accountEmail(for: .codex) ?? self.accountInfo(for: .codex).email),
+               dashboardEmail == currentEmail
+            {
+                let updatedUsage = currentUsage.withSubscriptionMetadata(
+                    expiresAt: dashboard.subscriptionExpiresAt,
+                    renewsAt: dashboard.subscriptionRenewsAt)
+                self.snapshots[.codex] = updatedUsage
+                if updatedUsage.subscriptionExpiresAt != currentUsage.subscriptionExpiresAt ||
+                    updatedUsage.subscriptionRenewsAt != currentUsage.subscriptionRenewsAt
+                {
+                    self.persistWidgetSnapshot(reason: "dashboard-subscription-metadata")
+                }
+            }
 
         case .failClosed:
             self.applyOpenAIDashboardCleanup(decision.cleanup, preserveVisibleDashboard: false)

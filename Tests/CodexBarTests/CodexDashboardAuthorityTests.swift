@@ -75,6 +75,7 @@ struct CodexDashboardAuthorityTests {
 
         #expect(decision.disposition == .displayOnly)
         #expect(decision.reason == .sameEmailAmbiguity(email: "shared@example.com"))
+        #expect(decision.allowedEffects == [.subscriptionMetadataAttachment])
     }
 
     @Test
@@ -360,6 +361,7 @@ struct CodexDashboardAuthorityTests {
 
         #expect(decision.disposition == .attach)
         #expect(decision.allowedEffects == Set([
+            .subscriptionMetadataAttachment,
             .usageBackfill,
             .creditsAttachment,
             .refreshGuardSeed,
@@ -417,7 +419,7 @@ struct CodexDashboardAuthorityTests {
         let decision = CodexDashboardAuthority.evaluate(input)
 
         #expect(decision.disposition == .displayOnly)
-        #expect(decision.allowedEffects.isEmpty)
+        #expect(decision.allowedEffects == [.subscriptionMetadataAttachment])
         #expect(decision.cleanup == Set(CodexDashboardCleanup.allCases))
     }
 
