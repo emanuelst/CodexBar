@@ -268,7 +268,7 @@ public struct OpenAIDashboardFetcher {
                 return Self.snapshotByMergingAPI(
                     apiData: apiData,
                     verifiedEmail: verifiedSignedInEmail,
-                    subscription: subscription,
+                    subscriptionResult: subscription,
                     previous: previousSnapshot)
             }
             if let previousSnapshot {
@@ -295,7 +295,7 @@ public struct OpenAIDashboardFetcher {
             webView: lease.webView,
             apiData: apiData,
             verifiedSignedInEmail: verifiedSignedInEmail,
-            subscription: subscription,
+            subscriptionResult: subscription,
             previousSnapshot: previousSnapshot,
             deadline: deadline,
             startedAt: startedAt,
@@ -645,7 +645,7 @@ public struct OpenAIDashboardFetcher {
         async throws -> (
             apiData: DashboardAPIData?,
             verifiedSignedInEmail: String?,
-            subscription: OpenAISubscriptionMetadata?)
+            subscription: OpenAISubscriptionFetchResult)
     {
         let cookieHeader = try await self.chatGPTCookieHeader(in: websiteDataStore, deadline: deadline)
         let apiData = await self.fetchDashboardUsageAPI(
@@ -754,11 +754,11 @@ public struct OpenAIDashboardFetcher {
     private static func fetchSubscriptionFromAPI(
         cookieHeader: String,
         deadline: Date?,
-        logger: @escaping (String) -> Void) async -> OpenAISubscriptionMetadata?
+        logger: @escaping (String) -> Void) async -> OpenAISubscriptionFetchResult
     {
-        guard !cookieHeader.isEmpty else { return nil }
+        guard !cookieHeader.isEmpty else { return .unavailable }
         let remaining = deadline.map { self.remainingTimeout(until: $0) } ?? 2
-        guard remaining > 0 else { return nil }
+        guard remaining > 0 else { return .unavailable }
 
         do {
             let (data, response) = try await CodexAuthenticatedHTTPTransport.current.data(
@@ -767,15 +767,17 @@ public struct OpenAIDashboardFetcher {
                     timeout: min(2, remaining)))
             let status = (response as? HTTPURLResponse)?.statusCode ?? -1
             logger("subscription api status=\(status)")
-            guard status >= 200, status < 300 else { return nil }
+            guard status >= 200, status < 300 else { return .unavailable }
             let metadata = self.subscriptionMetadata(from: data)
             if metadata != nil {
                 logger("subscription api supplied renewal data")
+            } else {
+                logger("subscription api response empty")
             }
-            return metadata
+            return .success(metadata)
         } catch {
             logger("subscription api unavailable: \(error.localizedDescription)")
-            return nil
+            return .unavailable
         }
     }
 

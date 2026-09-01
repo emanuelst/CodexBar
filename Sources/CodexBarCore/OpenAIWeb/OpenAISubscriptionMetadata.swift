@@ -10,6 +10,9 @@ let openAISubscriptionCaptureScript = """
   if (window.__codexbarSubscriptionCaptureInstalled) return;
   window.__codexbarSubscriptionCaptureInstalled = true;
   window.__codexbarSubscriptionCaptureGeneration = 0;
+  window.__codexbarSubscriptionResponseStatus = null;
+  window.__codexbarSubscriptionResponseSettled = false;
+  window.__codexbarSubscriptionMetadata = null;
   const originalFetch = window.fetch.bind(window);
   window.fetch = async (...args) => {
     const generation = window.__codexbarSubscriptionCaptureGeneration;
@@ -20,13 +23,22 @@ let openAISubscriptionCaptureScript = """
       const requestURL = new URL(String(rawURL), window.location.href);
       if (requestURL.origin === window.location.origin &&
           requestURL.pathname === '/backend-api/subscriptions') {
+        if (window.__codexbarSubscriptionCaptureGeneration === generation) {
+          window.__codexbarSubscriptionResponseStatus = response.status;
+          window.__codexbarSubscriptionResponseSettled = false;
+        }
         response.clone().json().then(payload => {
           if (window.__codexbarSubscriptionCaptureGeneration !== generation) return;
+          window.__codexbarSubscriptionResponseSettled = true;
           window.__codexbarSubscriptionMetadata = {
             activeUntil: typeof payload?.active_until === 'string' ? payload.active_until : null,
             willRenew: typeof payload?.will_renew === 'boolean' ? payload.will_renew : null
           };
-        }).catch(() => {});
+        }).catch(() => {
+          if (window.__codexbarSubscriptionCaptureGeneration !== generation) return;
+          window.__codexbarSubscriptionResponseSettled = true;
+          window.__codexbarSubscriptionMetadata = null;
+        });
       }
     } catch (_) {}
     return response;
@@ -38,6 +50,8 @@ let openAISubscriptionResetScript = """
 (() => {
   const generation = Number(window.__codexbarSubscriptionCaptureGeneration || 0) + 1;
   window.__codexbarSubscriptionCaptureGeneration = generation;
+  window.__codexbarSubscriptionResponseStatus = null;
+  window.__codexbarSubscriptionResponseSettled = false;
   window.__codexbarSubscriptionMetadata = null;
   return generation;
 })();
@@ -46,6 +60,8 @@ let openAISubscriptionResetScript = """
 let openAISubscriptionReadScript = """
 (() => ({
   isBillingRoute: String(window.location.hash || '').toLowerCase().includes('settings/billing'),
+  responseStatus: window.__codexbarSubscriptionResponseStatus,
+  responseSettled: window.__codexbarSubscriptionResponseSettled,
   metadata: window.__codexbarSubscriptionMetadata || null
 }))();
 """
@@ -72,6 +88,17 @@ struct OpenAISubscriptionMetadata: Equatable {
     }
 }
 
+struct OpenAISubscriptionFetchResult: Equatable {
+    let metadata: OpenAISubscriptionMetadata?
+    let succeeded: Bool
+
+    static let unavailable = Self(metadata: nil, succeeded: false)
+
+    static func success(_ metadata: OpenAISubscriptionMetadata?) -> Self {
+        Self(metadata: metadata, succeeded: true)
+    }
+}
+
 /// Opens ChatGPT's billing settings so its frontend performs the authenticated
 /// subscription request captured by `openAISubscriptionCaptureScript`.
 @MainActor
@@ -82,14 +109,14 @@ enum OpenAISubscription {
     static func fetch(
         _ webView: WKWebView,
         deadline: Date,
-        logger: @escaping (String) -> Void) async throws -> OpenAISubscriptionMetadata?
+        logger: @escaping (String) -> Void) async throws -> OpenAISubscriptionFetchResult
     {
-        guard Date() < deadline else { return nil }
+        guard Date() < deadline else { return .unavailable }
         try Task.checkCancellation()
 
         guard await (try? webView.evaluateJavaScript(openAISubscriptionResetScript)) != nil else {
             logger("subscription metadata reset unavailable")
-            return nil
+            return .unavailable
         }
         try Task.checkCancellation()
 
@@ -103,21 +130,32 @@ enum OpenAISubscription {
             guard let any = try? await webView.evaluateJavaScript(openAISubscriptionReadScript),
                   let result = any as? [String: Any],
                   (result["isBillingRoute"] as? Bool) == true,
-                  let raw = result["metadata"] as? [String: Any],
-                  let metadata = OpenAISubscriptionMetadata.parse(
-                      activeUntil: raw["activeUntil"] as? String,
-                      willRenew: raw["willRenew"] as? Bool)
+                  (result["responseSettled"] as? Bool) == true
             else { continue }
 
-            logger(
-                "subscription metadata found " +
-                    "renewal=\(metadata.renewsAt == nil ? "0" : "1") " +
-                    "expiration=\(metadata.expiresAt == nil ? "0" : "1")")
-            return metadata
+            guard let status = result["responseStatus"] as? Int, (200..<300).contains(status) else {
+                logger("subscription metadata unavailable")
+                return .unavailable
+            }
+
+            let raw = result["metadata"] as? [String: Any]
+            let metadata = OpenAISubscriptionMetadata.parse(
+                activeUntil: raw?["activeUntil"] as? String,
+                willRenew: raw?["willRenew"] as? Bool)
+
+            if let metadata {
+                logger(
+                    "subscription metadata found " +
+                        "renewal=\(metadata.renewsAt == nil ? "0" : "1") " +
+                        "expiration=\(metadata.expiresAt == nil ? "0" : "1")")
+            } else {
+                logger("subscription metadata response empty")
+            }
+            return .success(metadata)
         }
 
         logger("subscription metadata unavailable")
-        return nil
+        return .unavailable
     }
 }
 #endif

@@ -7,7 +7,7 @@ extension OpenAIDashboardFetcher {
         let webView: WKWebView
         let apiData: DashboardAPIData?
         let verifiedSignedInEmail: String?
-        let subscription: OpenAISubscriptionMetadata?
+        let subscriptionResult: OpenAISubscriptionFetchResult
         let previousSnapshot: OpenAIDashboardSnapshot?
         let deadline: Date
         let startedAt: Date
@@ -35,7 +35,7 @@ extension OpenAIDashboardFetcher {
         let webView = context.webView
         let apiData = context.apiData
         let verifiedSignedInEmail = context.verifiedSignedInEmail
-        let subscription = context.subscription
+        var subscriptionResult = context.subscriptionResult
         let previousSnapshot = context.previousSnapshot
         let deadline = context.deadline
         let startedAt = context.startedAt
@@ -50,17 +50,18 @@ extension OpenAIDashboardFetcher {
         var usageBreakdownErrorFirstSeenAt: Date?
         var lastUsageBreakdownError: String?
 
-        let capturedSubscription: OpenAISubscriptionMetadata?
-        if subscription == nil {
+        if subscriptionResult.metadata == nil {
             log("subscription metadata fallback start")
-            capturedSubscription = try? await OpenAISubscription.fetch(
+            let capturedResult = try? await OpenAISubscription.fetch(
                 webView,
                 deadline: min(deadline, Date().addingTimeInterval(10)),
                 logger: log)
-        } else {
-            capturedSubscription = nil
+            if let capturedResult,
+               capturedResult.succeeded || !subscriptionResult.succeeded
+            {
+                subscriptionResult = capturedResult
+            }
         }
-        let effectiveSubscription = subscription ?? capturedSubscription
 
         while Date() < deadline {
             try Task.checkCancellation()
@@ -185,7 +186,7 @@ extension OpenAIDashboardFetcher {
                 return Self.makePageSnapshot(
                     scrape: scrape,
                     dashboardData: dashboardData,
-                    subscription: effectiveSubscription,
+                    subscriptionResult: subscriptionResult,
                     previousSnapshot: previousSnapshot)
             }
 
@@ -197,7 +198,7 @@ extension OpenAIDashboardFetcher {
             return Self.snapshotByMergingAPI(
                 apiData: apiData,
                 verifiedEmail: verifiedSignedInEmail,
-                subscription: effectiveSubscription,
+                subscriptionResult: subscriptionResult,
                 previous: previousSnapshot)
         }
 
@@ -210,7 +211,7 @@ extension OpenAIDashboardFetcher {
     nonisolated static func makePageSnapshot(
         scrape: ScrapeResult,
         dashboardData: DashboardScrapeData,
-        subscription: OpenAISubscriptionMetadata?,
+        subscriptionResult: OpenAISubscriptionFetchResult,
         previousSnapshot: OpenAIDashboardSnapshot?) -> OpenAIDashboardSnapshot
     {
         self.fillingMissingPageFields(
@@ -227,9 +228,9 @@ extension OpenAIDashboardFetcher {
                 creditsRemaining: dashboardData.creditsRemaining,
                 codexCreditLimit: dashboardData.codexCreditLimit,
                 accountPlan: dashboardData.accountPlan,
-                subscription: subscription)),
+                subscription: subscriptionResult.metadata)),
             from: previousSnapshot,
-            subscription: subscription)
+            subscriptionResult: subscriptionResult)
     }
 
     nonisolated static func shouldWaitForCreditsHistory(
