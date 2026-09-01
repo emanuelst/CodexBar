@@ -5,6 +5,11 @@ import WebKit
 
 @MainActor
 public struct OpenAIDashboardFetcher {
+    private struct SubscriptionAPIResult {
+        let metadata: OpenAISubscriptionMetadata?
+        let shouldUseWebViewFallback: Bool
+    }
+
     public enum FetchError: LocalizedError {
         case loginRequired
         case noDashboardData(body: String)
@@ -296,6 +301,7 @@ public struct OpenAIDashboardFetcher {
             apiData: apiData,
             verifiedSignedInEmail: verifiedSignedInEmail,
             subscription: subscription,
+            allowSubscriptionWebViewFallback: preflight.shouldUseSubscriptionWebViewFallback,
             previousSnapshot: previousSnapshot,
             deadline: deadline,
             startedAt: startedAt,
@@ -645,7 +651,8 @@ public struct OpenAIDashboardFetcher {
         async throws -> (
             apiData: DashboardAPIData?,
             verifiedSignedInEmail: String?,
-            subscription: OpenAISubscriptionMetadata?)
+            subscription: OpenAISubscriptionMetadata?,
+            shouldUseSubscriptionWebViewFallback: Bool)
     {
         let cookieHeader = try await self.chatGPTCookieHeader(in: websiteDataStore, deadline: deadline)
         let apiData = await self.fetchDashboardUsageAPI(
@@ -662,7 +669,7 @@ public struct OpenAIDashboardFetcher {
         }
         // Subscription metadata is an independent dashboard adjunct. The usage endpoint can
         // fail or return no quota data while the authenticated subscription endpoint still works.
-        let subscription = await self.fetchSubscriptionFromAPI(
+        let subscriptionResult = await self.fetchSubscriptionFromAPI(
             cookieHeader: cookieHeader,
             deadline: deadline,
             logger: logger)
@@ -670,7 +677,11 @@ public struct OpenAIDashboardFetcher {
         if apiData?.hasUsageData == true, verifiedEmail != nil {
             logger("usage api supplied verified dashboard data")
         }
-        return (apiData, verifiedEmail, subscription)
+        return (
+            apiData,
+            verifiedEmail,
+            subscriptionResult.metadata,
+            subscriptionResult.shouldUseWebViewFallback)
     }
 
     private static func fetchDashboardUsageAPI(
@@ -751,14 +762,18 @@ public struct OpenAIDashboardFetcher {
         return nil
     }
 
-    static func fetchSubscriptionFromAPI(
+    private static func fetchSubscriptionFromAPI(
         cookieHeader: String,
         deadline: Date?,
-        logger: @escaping (String) -> Void) async -> OpenAISubscriptionMetadata?
+        logger: @escaping (String) -> Void) async -> SubscriptionAPIResult
     {
-        guard !cookieHeader.isEmpty else { return nil }
+        guard !cookieHeader.isEmpty else {
+            return .init(metadata: nil, shouldUseWebViewFallback: false)
+        }
         let remaining = deadline.map { self.remainingTimeout(until: $0) } ?? 2
-        guard remaining > 0 else { return nil }
+        guard remaining > 0 else {
+            return .init(metadata: nil, shouldUseWebViewFallback: false)
+        }
 
         do {
             let (data, response) = try await CodexAuthenticatedHTTPTransport.current.data(
@@ -767,15 +782,19 @@ public struct OpenAIDashboardFetcher {
                     timeout: min(2, remaining)))
             let status = (response as? HTTPURLResponse)?.statusCode ?? -1
             logger("subscription api status=\(status)")
-            guard status >= 200, status < 300 else { return nil }
+            guard status >= 200, status < 300 else {
+                return .init(
+                    metadata: nil,
+                    shouldUseWebViewFallback: status == 401 || status == 403)
+            }
             let metadata = self.subscriptionMetadata(from: data)
             if metadata != nil {
                 logger("subscription api supplied renewal data")
             }
-            return metadata
+            return .init(metadata: metadata, shouldUseWebViewFallback: false)
         } catch {
             logger("subscription api unavailable: \(error.localizedDescription)")
-            return nil
+            return .init(metadata: nil, shouldUseWebViewFallback: false)
         }
     }
 

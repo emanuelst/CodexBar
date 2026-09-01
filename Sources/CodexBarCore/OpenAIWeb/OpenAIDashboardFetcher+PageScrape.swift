@@ -8,6 +8,7 @@ extension OpenAIDashboardFetcher {
         let apiData: DashboardAPIData?
         let verifiedSignedInEmail: String?
         let subscription: OpenAISubscriptionMetadata?
+        let allowSubscriptionWebViewFallback: Bool
         let previousSnapshot: OpenAIDashboardSnapshot?
         let deadline: Date
         let startedAt: Date
@@ -36,6 +37,7 @@ extension OpenAIDashboardFetcher {
         let apiData = context.apiData
         let verifiedSignedInEmail = context.verifiedSignedInEmail
         let subscription = context.subscription
+        let allowSubscriptionWebViewFallback = context.allowSubscriptionWebViewFallback
         let previousSnapshot = context.previousSnapshot
         let deadline = context.deadline
         let startedAt = context.startedAt
@@ -51,7 +53,7 @@ extension OpenAIDashboardFetcher {
         var lastUsageBreakdownError: String?
 
         let capturedSubscription: OpenAISubscriptionMetadata?
-        if subscription == nil {
+        if subscription == nil, allowSubscriptionWebViewFallback {
             log("subscription metadata fallback start")
             capturedSubscription = try? await OpenAISubscription.fetch(
                 webView,
