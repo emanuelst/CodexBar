@@ -103,14 +103,6 @@ extension StatusItemController: StatusItemMenuPersistentActionDelegate {
             if provider == .codex {
                 await self.store.refreshCreditsNow(minimumSnapshotUpdatedAt: refreshStartedAt)
                 guard !Task.isCancelled, !self.hasPreparedForAppShutdown else { return }
-                let targetEmail = self.store.currentCodexOpenAIWebTargetEmail(
-                    allowCurrentSnapshotFallback: true,
-                    allowLastKnownLiveFallback: false)
-                _ = await self.store.importOpenAIDashboardCookiesIfNeeded(
-                    targetEmail: targetEmail,
-                    force: true,
-                    preferCachedCookieHeader: false)
-                guard !Task.isCancelled, !self.hasPreparedForAppShutdown else { return }
                 await self.store.refreshOpenAIDashboardIfNeeded(
                     force: true,
                     expectedGuard: self.store.freshCodexOpenAIWebRefreshGuard(),

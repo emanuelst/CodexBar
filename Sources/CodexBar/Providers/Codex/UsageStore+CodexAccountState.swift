@@ -39,7 +39,6 @@ extension UsageStore {
 
     func refreshCodexAccountScopedState(
         allowDisabled: Bool = false,
-        forceOpenAIDashboardCookieImport: Bool = false,
         phaseDidChange: (@MainActor (CodexAccountScopedRefreshPhase) -> Void)? = nil)
         async
     {
@@ -55,15 +54,6 @@ extension UsageStore {
         phaseDidChange?(.credits)
 
         if self.settings.codexCookieSource.isEnabled {
-            if forceOpenAIDashboardCookieImport {
-                let targetEmail = self.currentCodexOpenAIWebTargetEmail(
-                    allowCurrentSnapshotFallback: true,
-                    allowLastKnownLiveFallback: false)
-                _ = await self.importOpenAIDashboardCookiesIfNeeded(
-                    targetEmail: targetEmail,
-                    force: true,
-                    preferCachedCookieHeader: false)
-            }
             let expectedGuard = self.freshCodexOpenAIWebRefreshGuard()
             await self.refreshOpenAIDashboardIfNeeded(
                 force: true,
