@@ -41,13 +41,7 @@ public enum KeychainCacheStore {
     }
 
     private static let log = CodexBarLog.logger(LogCategories.keychainCache)
-    private static let productionCacheService = "com.steipete.codexbar.cache"
-#if DEBUG
-    // Keep side-by-side debug builds from colliding with the signed app's legacy ACL.
-    private static let cacheService = "\(Self.productionCacheService).debug"
-#else
-    private static let cacheService = Self.productionCacheService
-#endif
+    private static let cacheService = "com.steipete.codexbar.cache"
     private static let cacheLabel = "CodexBar Cache"
     @TaskLocal private static var serviceOverride: String?
     @TaskLocal private static var forceImplicitTestStore = false
