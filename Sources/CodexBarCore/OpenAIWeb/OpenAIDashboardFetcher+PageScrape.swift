@@ -50,6 +50,18 @@ extension OpenAIDashboardFetcher {
         var usageBreakdownErrorFirstSeenAt: Date?
         var lastUsageBreakdownError: String?
 
+        let capturedSubscription: OpenAISubscriptionMetadata?
+        if subscription == nil {
+            log("subscription metadata fallback start")
+            capturedSubscription = try? await OpenAISubscription.fetch(
+                webView,
+                deadline: min(deadline, Date().addingTimeInterval(10)),
+                logger: log)
+        } else {
+            capturedSubscription = nil
+        }
+        let effectiveSubscription = subscription ?? capturedSubscription
+
         while Date() < deadline {
             try Task.checkCancellation()
             let probe = try await self.probeReadiness(webView: webView)
@@ -173,7 +185,7 @@ extension OpenAIDashboardFetcher {
                 return Self.makePageSnapshot(
                     scrape: scrape,
                     dashboardData: dashboardData,
-                    subscription: subscription,
+                    subscription: effectiveSubscription,
                     previousSnapshot: previousSnapshot)
             }
 
@@ -185,7 +197,7 @@ extension OpenAIDashboardFetcher {
             return Self.snapshotByMergingAPI(
                 apiData: apiData,
                 verifiedEmail: verifiedSignedInEmail,
-                subscription: subscription,
+                subscription: effectiveSubscription,
                 previous: previousSnapshot)
         }
 

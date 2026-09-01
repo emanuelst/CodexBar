@@ -660,14 +660,12 @@ public struct OpenAIDashboardFetcher {
         } else {
             nil
         }
-        let subscription: OpenAISubscriptionMetadata? = if apiData?.hasUsageData == true {
-            await self.fetchSubscriptionFromAPI(
-                cookieHeader: cookieHeader,
-                deadline: deadline,
-                logger: logger)
-        } else {
-            nil
-        }
+        // Subscription metadata is an independent dashboard adjunct. The usage endpoint can
+        // fail or return no quota data while the authenticated subscription endpoint still works.
+        let subscription = await self.fetchSubscriptionFromAPI(
+            cookieHeader: cookieHeader,
+            deadline: deadline,
+            logger: logger)
 
         if apiData?.hasUsageData == true, verifiedEmail != nil {
             logger("usage api supplied verified dashboard data")

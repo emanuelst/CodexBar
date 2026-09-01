@@ -154,7 +154,9 @@ struct ProvidersPane: View {
             await ProviderSettingsRefreshInteraction.perform {
                 // Provider-specific by design: Codex account reconciliation must refresh managed profile state too.
                 if provider == .codex {
-                    await self.store.refreshCodexAccountScopedState(allowDisabled: true)
+                    await self.store.refreshCodexAccountScopedState(
+                        allowDisabled: true,
+                        forceOpenAIDashboardCookieImport: true)
                 } else {
                     await self.store.refreshProvider(provider, allowDisabled: true)
                 }
