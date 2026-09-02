@@ -154,8 +154,8 @@ public enum CodexDashboardPolicyError: LocalizedError, Equatable, Sendable {
 public enum CodexDashboardAuthority {
     /// Evaluates whether a Codex dashboard snapshot may attach to the active account.
     ///
-    /// App callers may keep `.displayOnly` dashboard data visible, but must not attach usage,
-    /// credits, refresh guards, or historical backfill.
+    /// App callers may keep `.displayOnly` dashboard data visible, but must not attach any
+    /// dashboard-derived state to the active account.
     ///
     /// CLI callers should surface `.displayOnly` as `CodexDashboardPolicyError.displayOnly`
     /// instead of treating it as a generic failure.
@@ -318,9 +318,6 @@ public enum CodexDashboardAuthority {
         disposition: CodexDashboardDisposition,
         sourceKind: CodexDashboardSourceKind) -> Set<CodexDashboardAllowedEffect>
     {
-        if disposition == .displayOnly, sourceKind == .liveWeb {
-            return [.subscriptionMetadataAttachment]
-        }
         guard disposition == .attach else { return [] }
 
         switch sourceKind {
