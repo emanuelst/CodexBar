@@ -1,4 +1,4 @@
-import CodexBarCore
+import CodexBarCore // swiftlint:disable file_length
 import Foundation
 
 struct OpenAIWebRefreshGateContext {
@@ -118,9 +118,9 @@ extension UsageStore {
         targetEmail: String?,
         expectedGuard: CodexAccountScopedRefreshGuard? = nil,
         refreshTaskToken: UUID? = nil,
-        allowCodexUsageBackfill: Bool = true) async
+        allowCodexUsageBackfill: Bool = true) async -> Bool
     {
-        guard self.shouldApplyOpenAIDashboardRefreshTask(token: refreshTaskToken) else { return }
+        guard self.shouldApplyOpenAIDashboardRefreshTask(token: refreshTaskToken) else { return false }
         self.settings.invalidateCodexAccountReconciliationSnapshotCache()
         let authority = self.evaluateCodexDashboardAuthority(
             dashboard: dash,
@@ -137,7 +137,7 @@ extension UsageStore {
                     expectedGuard: expectedGuard,
                     routingTargetEmail: targetEmail)
             }
-            guard shouldApply else { return }
+            guard shouldApply else { return false }
         }
 
         let attachedAccountEmail = self.codexDashboardAttachmentEmail(from: authority.input)
@@ -151,6 +151,108 @@ extension UsageStore {
             authorityInput: authority.input,
             attachedAccountEmail: attachedAccountEmail,
             allowCodexUsageBackfill: allowCodexUsageBackfill)
+        return authority.decision.disposition == .attach
+    }
+
+    private func applyOpenAIDashboardAndScheduleSubscriptionEnrichment(
+        _ dashboard: OpenAIDashboardSnapshot,
+        targetEmail: String?,
+        context: OpenAIDashboardRefreshContext) async
+    {
+        if await self.applyOpenAIDashboard(
+            dashboard,
+            targetEmail: targetEmail,
+            expectedGuard: context.expectedGuard,
+            refreshTaskToken: context.refreshTaskToken,
+            allowCodexUsageBackfill: context.allowCodexUsageBackfill)
+        {
+            self.scheduleOpenAISubscriptionMetadataEnrichment(
+                dashboard: dashboard,
+                targetEmail: targetEmail,
+                expectedGuard: context.expectedGuard)
+        }
+    }
+
+    func scheduleOpenAISubscriptionMetadataEnrichment(
+        dashboard: OpenAIDashboardSnapshot,
+        targetEmail: String?,
+        expectedGuard: CodexAccountScopedRefreshGuard?)
+    {
+        self.openAISubscriptionMetadataEnrichmentTask?.cancel()
+        let token = UUID()
+        self.openAISubscriptionMetadataEnrichmentToken = token
+        let cacheScope = self.codexCookieCacheScopeForOpenAIWeb()
+        let log: (String) -> Void = { [weak self] line in self?.logOpenAIWeb(line) }
+        self.openAISubscriptionMetadataEnrichmentTask = Task(priority: .utility) { @MainActor [weak self] in
+            guard let self else { return }
+            defer {
+                if self.openAISubscriptionMetadataEnrichmentToken == token {
+                    self.openAISubscriptionMetadataEnrichmentTask = nil
+                    self.openAISubscriptionMetadataEnrichmentToken = nil
+                }
+            }
+            let result: OpenAISubscriptionFetchResult = if let override = self
+                ._test_openAISubscriptionMetadataLoaderOverride
+            {
+                await override(targetEmail)
+            } else {
+                await OpenAIDashboardFetcher().fetchSubscriptionMetadata(
+                    accountEmail: targetEmail,
+                    cacheScope: cacheScope,
+                    logger: log)
+            }
+            await self.applyOpenAISubscriptionMetadataEnrichment(
+                result,
+                dashboard: dashboard,
+                targetEmail: targetEmail,
+                expectedGuard: expectedGuard,
+                token: token)
+        }
+    }
+
+    private func applyOpenAISubscriptionMetadataEnrichment(
+        _ result: OpenAISubscriptionFetchResult,
+        dashboard: OpenAIDashboardSnapshot,
+        targetEmail: String?,
+        expectedGuard: CodexAccountScopedRefreshGuard?,
+        token: UUID) async
+    {
+        guard !Task.isCancelled,
+              self.openAISubscriptionMetadataEnrichmentToken == token,
+              result.succeeded
+        else { return }
+        let enrichedDashboard = dashboard.withSubscriptionMetadata(result.metadata)
+        let authority = self.evaluateCodexDashboardAuthority(
+            dashboard: enrichedDashboard,
+            sourceKind: .liveWeb,
+            routingTargetEmail: targetEmail)
+        guard authority.decision.disposition == .attach else {
+            self.logOpenAIWeb("subscription metadata enrichment skipped: authority=\(authority.decision.disposition)")
+            return
+        }
+        if let expectedGuard,
+           !self.shouldApplyOpenAIDashboardRefreshGuard(
+               expectedGuard: expectedGuard,
+               routingTargetEmail: targetEmail)
+        {
+            self.logOpenAIWeb("subscription metadata enrichment skipped: refresh guard changed")
+            return
+        }
+        guard self.openAIDashboard?.signedInEmail == dashboard.signedInEmail else {
+            self.logOpenAIWeb("subscription metadata enrichment skipped: dashboard changed")
+            return
+        }
+        self.openAIDashboard = enrichedDashboard
+        self.lastOpenAIDashboardSnapshot = enrichedDashboard
+        let didPersist = self.applyOpenAIDashboardSubscriptionMetadata(enrichedDashboard)
+        self
+            .logOpenAIWeb(
+                "subscription metadata enrichment \(didPersist ? "persisted" : "unchanged"): authority=attach")
+        if let attachedEmail = self.codexDashboardAttachmentEmail(from: authority.input), !attachedEmail.isEmpty {
+            OpenAIDashboardCacheStore.save(OpenAIDashboardCache(
+                accountEmail: attachedEmail,
+                snapshot: enrichedDashboard))
+        }
     }
 
     func applyOpenAIDashboardFailure(
@@ -256,13 +358,16 @@ extension UsageStore {
             self.lastOpenAIDashboardError = nil
             self.openAIDashboardRequiresLogin = false
 
-            // Provider-specific by design: an authorized OpenAI dashboard attaches metadata/backfill to Codex usage.
-            if let currentUsage = self.snapshots[.codex] {
-                self.snapshots[.codex] = currentUsage.withSubscriptionMetadata(
-                    expiresAt: dashboard.subscriptionExpiresAt,
-                    renewsAt: dashboard.subscriptionRenewsAt)
+            if decision.allowedEffects.contains(.subscriptionMetadataAttachment) {
+                let didPersist = self.applyOpenAIDashboardSubscriptionMetadata(dashboard)
+                let outcome = didPersist ? "persisted" : "unchanged"
+                self.logOpenAIWeb("subscription metadata \(outcome): authority=attach")
+            } else {
+                self.logOpenAIWeb("subscription metadata skipped: authority=attach effect=not-allowed")
             }
 
+            // Provider-specific by design: an authorized OpenAI dashboard can backfill only the
+            // active Codex usage snapshot.
             if decision.allowedEffects.contains(.usageBackfill),
                allowCodexUsageBackfill,
                self.snapshots[.codex] == nil,
@@ -310,6 +415,9 @@ extension UsageStore {
             }
 
         case .displayOnly:
+            self.logOpenAIWeb(
+                "subscription metadata skipped: authority=display-only "
+                    + "reason=same-email-ambiguity persistence=not-attempted")
             self.applyOpenAIDashboardCleanup(decision.cleanup, preserveVisibleDashboard: true)
             self.openAIDashboard = dashboard
             self.openAIDashboardAttachmentAuthorized = false
@@ -319,6 +427,7 @@ extension UsageStore {
             self.openAIDashboardRequiresLogin = false
 
         case .failClosed:
+            self.logOpenAIWeb("subscription metadata skipped: authority=fail-closed")
             self.applyOpenAIDashboardCleanup(decision.cleanup, preserveVisibleDashboard: false)
             self.lastOpenAIDashboardError = self.openAIDashboardPolicyFailureMessage(
                 for: decision,
@@ -609,12 +718,10 @@ extension UsageStore {
                 guard self.shouldContinueOpenAIDashboardRefresh(token: context.refreshTaskToken) else { return }
             }
 
-            await self.applyOpenAIDashboard(
+            await self.applyOpenAIDashboardAndScheduleSubscriptionEnrichment(
                 dash,
                 targetEmail: effectiveEmail,
-                expectedGuard: context.expectedGuard,
-                refreshTaskToken: context.refreshTaskToken,
-                allowCodexUsageBackfill: context.allowCodexUsageBackfill)
+                context: context)
         } catch let OpenAIDashboardFetcher.FetchError.noDashboardData(body) {
             guard self.shouldContinueOpenAIDashboardRefresh(token: context.refreshTaskToken) else { return }
             await self.retryOpenAIDashboardAfterNoData(
@@ -698,12 +805,10 @@ extension UsageStore {
                 timeout: Self.openAIWebRetryDashboardFetchTimeout(afterCookieImport: true),
                 force: context.force)
             guard self.shouldContinueOpenAIDashboardRefresh(token: context.refreshTaskToken) else { return }
-            await self.applyOpenAIDashboard(
+            await self.applyOpenAIDashboardAndScheduleSubscriptionEnrichment(
                 dash,
                 targetEmail: effectiveEmail,
-                expectedGuard: context.expectedGuard,
-                refreshTaskToken: context.refreshTaskToken,
-                allowCodexUsageBackfill: context.allowCodexUsageBackfill)
+                context: context)
         } catch {
             guard self.shouldContinueOpenAIDashboardRefresh(token: context.refreshTaskToken) else { return }
             let message = self.preferredOpenAIDashboardFailureMessage(
@@ -751,12 +856,10 @@ extension UsageStore {
                 timeout: Self.openAIWebRetryDashboardFetchTimeout(afterCookieImport: true),
                 force: context.force)
             guard self.shouldContinueOpenAIDashboardRefresh(token: context.refreshTaskToken) else { return }
-            await self.applyOpenAIDashboard(
+            await self.applyOpenAIDashboardAndScheduleSubscriptionEnrichment(
                 dash,
                 targetEmail: effectiveEmail,
-                expectedGuard: context.expectedGuard,
-                refreshTaskToken: context.refreshTaskToken,
-                allowCodexUsageBackfill: context.allowCodexUsageBackfill)
+                context: context)
         } catch let OpenAIDashboardFetcher.FetchError.noDashboardData(retryBody) {
             guard self.shouldContinueOpenAIDashboardRefresh(token: context.refreshTaskToken) else { return }
             let finalBody = retryBody.isEmpty ? body : retryBody
@@ -816,12 +919,10 @@ extension UsageStore {
                 timeout: Self.openAIWebRetryDashboardFetchTimeout(afterCookieImport: true),
                 force: context.force)
             guard self.shouldContinueOpenAIDashboardRefresh(token: context.refreshTaskToken) else { return }
-            await self.applyOpenAIDashboard(
+            await self.applyOpenAIDashboardAndScheduleSubscriptionEnrichment(
                 dash,
                 targetEmail: effectiveEmail,
-                expectedGuard: context.expectedGuard,
-                refreshTaskToken: context.refreshTaskToken,
-                allowCodexUsageBackfill: context.allowCodexUsageBackfill)
+                context: context)
         } catch OpenAIDashboardFetcher.FetchError.loginRequired {
             guard self.shouldContinueOpenAIDashboardRefresh(token: context.refreshTaskToken) else { return }
             await self.applyOpenAIDashboardLoginRequiredFailure(
@@ -1039,6 +1140,9 @@ extension UsageStore {
         self.openAIDashboardRefreshTask = nil
         self.openAIDashboardRefreshTaskKey = nil
         self.openAIDashboardRefreshTaskToken = nil
+        self.openAISubscriptionMetadataEnrichmentTask?.cancel()
+        self.openAISubscriptionMetadataEnrichmentTask = nil
+        self.openAISubscriptionMetadataEnrichmentToken = nil
     }
 
     private func currentOpenAIDashboardCookieImportStatus() -> String? {
