@@ -15,22 +15,32 @@ let openAISubscriptionCaptureScript = """
   window.__codexbarSubscriptionMetadata = null;
   window.__codexbarSubscriptionMetadataParseState = null;
   const originalFetch = window.fetch.bind(window);
+  let latestRequest = 0;
   window.fetch = async (...args) => {
     const generation = window.__codexbarSubscriptionCaptureGeneration;
-    const response = await originalFetch(...args);
+    let request = null;
     try {
       const input = args[0];
-      const rawURL = input && input.url ? input.url : input;
-      const requestURL = new URL(String(rawURL), window.location.href);
-      if (requestURL.origin === window.location.origin &&
-          requestURL.pathname === '/backend-api/subscriptions') {
-        if (window.__codexbarSubscriptionCaptureGeneration === generation) {
-          window.__codexbarSubscriptionResponseStatus = response.status;
-          window.__codexbarSubscriptionResponseSettled = false;
-        }
+      const requestURL = new URL(String(input && input.url ? input.url : input), window.location.href);
+      if (requestURL.origin === window.location.origin && requestURL.pathname === '/backend-api/subscriptions') {
+        request = ++latestRequest;
+        window.__codexbarSubscriptionResponseStatus = null;
+        window.__codexbarSubscriptionResponseSettled = false;
+        window.__codexbarSubscriptionMetadata = null;
+        window.__codexbarSubscriptionMetadataParseState = null;
+      }
+    } catch (_) {}
+    const response = await originalFetch(...args);
+    if (request !== null) {
+      const publish = (metadata, valid) => {
+        if (window.__codexbarSubscriptionCaptureGeneration !== generation || request !== latestRequest) return;
+        window.__codexbarSubscriptionResponseStatus = response.status;
+        window.__codexbarSubscriptionMetadata = metadata;
+        window.__codexbarSubscriptionMetadataParseState = valid ? 'valid' : 'invalid';
+        window.__codexbarSubscriptionResponseSettled = true;
+      };
+      try {
         response.clone().json().then(payload => {
-          if (window.__codexbarSubscriptionCaptureGeneration !== generation) return;
-          window.__codexbarSubscriptionResponseSettled = true;
           const hasActiveUntil = payload &&
             (Object.prototype.hasOwnProperty.call(payload, 'active_until') ||
              Object.prototype.hasOwnProperty.call(payload, 'activeUntil'));
@@ -38,27 +48,16 @@ let openAISubscriptionCaptureScript = """
             (Object.prototype.hasOwnProperty.call(payload, 'will_renew') ||
              Object.prototype.hasOwnProperty.call(payload, 'willRenew'));
           const activeUntil = Object.prototype.hasOwnProperty.call(payload || {}, 'active_until')
-            ? payload.active_until
-            : payload?.activeUntil;
+            ? payload.active_until : payload?.activeUntil;
           const willRenew = Object.prototype.hasOwnProperty.call(payload || {}, 'will_renew')
-            ? payload.will_renew
-            : payload?.willRenew;
-          const schemaValid = hasActiveUntil && hasWillRenew &&
+            ? payload.will_renew : payload?.willRenew;
+          const valid = hasActiveUntil && hasWillRenew &&
             (activeUntil === null || typeof activeUntil === 'string') &&
             (willRenew === null || typeof willRenew === 'boolean');
-          window.__codexbarSubscriptionMetadataParseState = schemaValid ? 'valid' : 'invalid';
-          window.__codexbarSubscriptionMetadata = schemaValid ? {
-            activeUntil,
-            willRenew
-          } : null;
-        }).catch(() => {
-          if (window.__codexbarSubscriptionCaptureGeneration !== generation) return;
-          window.__codexbarSubscriptionResponseSettled = true;
-          window.__codexbarSubscriptionMetadataParseState = 'invalid';
-          window.__codexbarSubscriptionMetadata = null;
-        });
-      }
-    } catch (_) {}
+          publish(valid ? { activeUntil, willRenew } : null, valid);
+        }).catch(() => publish(null, false));
+      } catch (_) { publish(null, false); }
+    }
     return response;
   };
 })();
@@ -91,7 +90,6 @@ let openAISubscriptionReadScript = """
 @MainActor
 enum OpenAISubscription {
     private static let billingURL = URL(string: "https://chatgpt.com/#settings/Billing")!
-    private static let usageURL = URL(string: "https://chatgpt.com/codex/cloud/settings/analytics#usage")!
 
     static func fetch(
         _ webView: WKWebView,
@@ -101,20 +99,24 @@ enum OpenAISubscription {
         guard Date() < deadline else { return .unavailable }
         try Task.checkCancellation()
 
-        guard await (try? webView.evaluateJavaScript(openAISubscriptionResetScript)) != nil else {
+        guard try await self.evaluate(openAISubscriptionResetScript, in: webView, deadline: deadline) != nil else {
             logger("subscription metadata reset unavailable")
             return .unavailable
         }
         try Task.checkCancellation()
+        guard Date() < deadline else { return .unavailable }
 
         _ = webView.load(OpenAIDashboardFetcher.usageURLRequest(url: self.billingURL))
         let billingDeadline = min(deadline, Date().addingTimeInterval(8))
-        defer { _ = webView.load(OpenAIDashboardFetcher.usageURLRequest(url: self.usageURL)) }
 
         while Date() < billingDeadline {
-            try await Task.sleep(for: .milliseconds(400))
+            try await Task.sleep(for: .seconds(min(0.4, max(0, billingDeadline.timeIntervalSinceNow))))
             try Task.checkCancellation()
-            guard let any = try? await webView.evaluateJavaScript(openAISubscriptionReadScript),
+            guard Date() < billingDeadline else { break }
+            let any = try await Self.evaluate(openAISubscriptionReadScript, in: webView, deadline: billingDeadline)
+            try Task.checkCancellation()
+            guard Date() < billingDeadline else { break }
+            guard let any,
                   let result = any as? [String: Any],
                   (result["isBillingRoute"] as? Bool) == true,
                   (result["responseSettled"] as? Bool) == true
@@ -151,6 +153,20 @@ enum OpenAISubscription {
 
         logger("subscription metadata unavailable")
         return .unavailable
+    }
+
+    private static func evaluate(_ script: String, in webView: WKWebView, deadline: Date) async throws -> Any? {
+        let data: Data? = try await OpenAIDashboardBrowserCookieImporter.runBoundedValueCallback(
+            deadline: deadline)
+        { completion in
+            webView.evaluateJavaScript(script) { result, error in
+                guard error == nil, let result else { return completion(nil) }
+                completion(try? JSONSerialization.data(withJSONObject: result, options: .fragmentsAllowed))
+            }
+        }
+        try Task.checkCancellation()
+        guard let data else { return nil }
+        return try? JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed)
     }
 }
 #endif

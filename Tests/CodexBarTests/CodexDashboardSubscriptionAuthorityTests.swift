@@ -7,7 +7,8 @@ import Testing
 extension CodexAccountScopedRefreshTests {
     @Test
     func `display only dashboard cannot persist subscription metadata`() async throws {
-        let settings = self.makeSettingsStore(suite: "CodexAccountScopedRefreshTests-display-only-subscription")
+        let settings = CodexManagedOpenAIWebTests()
+            .makeSettingsStore(suite: "CodexAccountScopedRefreshTests-display-only-subscription")
         let managedHome = CodexCredentialFixtures.root
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: managedHome) }

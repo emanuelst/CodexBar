@@ -5,74 +5,12 @@ import Testing
 
 extension CodexManagedOpenAIWebTests {
     @Test
-    func `subscription metadata enriches an attached dashboard after its usage result`() async throws {
-        let settings = self.makeSettingsStore(suite: "CodexManagedOpenAIWebTests-subscription-enrichment")
-        let managedAccount = ManagedCodexAccount(
-            id: UUID(),
-            email: "managed@example.com",
-            managedHomePath: "/tmp/managed-codex-home",
-            createdAt: 1,
-            updatedAt: 1,
-            lastAuthenticatedAt: 1)
-        settings._test_activeManagedCodexAccount = managedAccount
-        settings.codexActiveSource = .managedAccount(id: managedAccount.id)
-        defer { settings._test_activeManagedCodexAccount = nil }
-
-        let store = UsageStore(
-            fetcher: UsageFetcher(environment: [:]),
-            browserDetection: BrowserDetection(cacheTTL: 0),
-            settings: settings,
-            startupBehavior: .testing)
-        let usage = UsageSnapshot(
-            primary: RateWindow(usedPercent: 18, windowMinutes: 300, resetsAt: nil, resetDescription: nil),
-            secondary: RateWindow(usedPercent: 42, windowMinutes: 10080, resetsAt: nil, resetDescription: nil),
-            updatedAt: Date(),
-            identity: ProviderIdentitySnapshot(
-                providerID: .codex,
-                accountEmail: managedAccount.email,
-                accountOrganization: nil,
-                loginMethod: "Pro"))
-        store.snapshots[.codex] = usage
-        store.lastSourceLabels[.codex] = "codex-cli"
-        let publicationGuard = store.currentCodexAccountScopedRefreshGuard()
-        store.lastCodexUsagePublicationGuard = publicationGuard
-        store.lastCodexAccountScopedRefreshGuard = publicationGuard
-        let dashboard = OpenAIDashboardSnapshot(
-            signedInEmail: managedAccount.email,
-            codeReviewRemainingPercent: 90,
-            creditEvents: [],
-            dailyBreakdown: [],
-            usageBreakdown: [],
-            creditsPurchaseURL: nil,
-            creditsRemaining: 10,
-            accountPlan: "Pro",
-            updatedAt: Date())
-        await store.applyOpenAIDashboard(dashboard, targetEmail: managedAccount.email)
-        #expect(store.snapshots[.codex]?.subscriptionRenewsAt == nil)
-
-        let renewal = Date(timeIntervalSince1970: 1_787_236_207)
-        store._test_openAISubscriptionMetadataLoaderOverride = { _ in
-            .success(.init(expiresAt: nil, renewsAt: renewal))
-        }
-        defer { store._test_openAISubscriptionMetadataLoaderOverride = nil }
-        store.scheduleOpenAISubscriptionMetadataEnrichment(
-            dashboard: dashboard,
-            targetEmail: managedAccount.email,
-            expectedGuard: nil)
-        let enrichmentTask = try #require(store.openAISubscriptionMetadataEnrichmentTask)
-        await enrichmentTask.value
-
-        #expect(store.snapshots[.codex]?.subscriptionRenewsAt == renewal)
-        #expect(store.openAIDashboard?.subscriptionRenewsAt == renewal)
-    }
-
-    @Test
     func `authorized dashboard merges subscription metadata into existing codex usage`() async throws {
         let settings = self.makeSettingsStore(suite: "CodexManagedOpenAIWebTests-subscription-merge")
         let managedAccount = ManagedCodexAccount(
             id: UUID(),
             email: "managed@example.com",
-            managedHomePath: "/tmp/managed-codex-home",
+            managedHomePath: CodexCredentialFixtures.root.appendingPathComponent("managed-home").path,
             createdAt: 1,
             updatedAt: 1,
             lastAuthenticatedAt: 1)
@@ -113,6 +51,8 @@ extension CodexManagedOpenAIWebTests {
         defer { store._test_widgetSnapshotSaveOverride = nil }
 
         let renewal = Date(timeIntervalSince1970: 1_787_236_207)
+        let creditReset = Date(timeIntervalSince1970: 1_789_000_000)
+        let dashboardUpdatedAt = Date(timeIntervalSince1970: 1_788_000_000)
         await store.applyOpenAIDashboard(
             OpenAIDashboardSnapshot(
                 signedInEmail: managedAccount.email,
@@ -122,9 +62,15 @@ extension CodexManagedOpenAIWebTests {
                 usageBreakdown: [],
                 creditsPurchaseURL: nil,
                 creditsRemaining: 10,
+                codexCreditLimit: CodexCreditLimitSnapshot(
+                    used: 125,
+                    limit: 500,
+                    remainingPercent: 75,
+                    resetsAt: creditReset,
+                    updatedAt: dashboardUpdatedAt),
                 accountPlan: "Pro",
                 subscriptionRenewsAt: renewal,
-                updatedAt: Date()),
+                updatedAt: dashboardUpdatedAt),
             targetEmail: managedAccount.email)
 
         let mergedUsage = try #require(store.snapshots[.codex])
@@ -137,6 +83,10 @@ extension CodexManagedOpenAIWebTests {
         #expect(mergedUsage.identity?.loginMethod == existingUsage.identity?.loginMethod)
         #expect(mergedUsage.subscriptionRenewsAt == renewal)
         #expect(mergedUsage.subscriptionExpiresAt == nil)
+        #expect(mergedUsage.providerCost?.used == 125)
+        #expect(mergedUsage.providerCost?.limit == 500)
+        #expect(mergedUsage.providerCost?.resetsAt == creditReset)
+        #expect(mergedUsage.providerCost?.currencyCode == CodexExtraUsageCost.currencyCode)
         #expect(store.lastSourceLabels[.codex] == "codex-cli")
         #expect(persistedWidgets.count == 1)
         #expect(store.openAIDashboardCookieImportDebugLog?.contains(
@@ -182,6 +132,7 @@ extension CodexManagedOpenAIWebTests {
                 updatedAt: Date()),
             targetEmail: managedAccount.email)
 
+        await store.widgetSnapshotPersistTask?.value
         let clearedUsage = try #require(store.snapshots[.codex])
         #expect(clearedUsage.subscriptionRenewsAt == nil)
         #expect(clearedUsage.subscriptionExpiresAt == nil)

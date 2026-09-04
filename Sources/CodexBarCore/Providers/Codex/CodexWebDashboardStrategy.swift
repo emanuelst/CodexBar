@@ -251,7 +251,10 @@ extension CodexWebDashboardStrategy {
                     accountEmail: attachedAccountEmail,
                     snapshot: dashboard))
             }
-            return OpenAIWebCodexResult(usage: usage, credits: credits, dashboard: dashboard)
+            return OpenAIWebCodexResult(
+                usage: CodexExtraUsageCost.attaching(to: usage, credits: credits),
+                credits: credits,
+                dashboard: dashboard)
         case .displayOnly:
             if decision.cleanup.contains(.dashboardCache) {
                 OpenAIDashboardCacheStore.clear()
@@ -317,6 +320,7 @@ extension CodexWebDashboardStrategy {
             logger: logger,
             debugDumpHTML: options.debugDumpHTML,
             timeout: OpenAIDashboardBrowserCookieImporter.remainingTimeout(until: options.deadline))
+        try Task.checkCancellation()
         let remainingTimeout = OpenAIDashboardFetcher.remainingTimeout(until: options.deadline)
         let subscriptionResult: OpenAISubscriptionFetchResult = if remainingTimeout > 0 {
             await OpenAIDashboardFetcher().fetchSubscriptionMetadata(
@@ -327,6 +331,7 @@ extension CodexWebDashboardStrategy {
         } else {
             .unavailable
         }
+        try Task.checkCancellation()
         return OpenAIWebDashboardFetchResult(
             dashboard: Self.dashboardByMergingSubscriptionMetadata(
                 dashboard,

@@ -4,7 +4,6 @@ import Foundation
 import WebKit
 
 @MainActor
-// swiftlint:disable:next type_body_length
 public struct OpenAIDashboardFetcher {
     public enum FetchError: LocalizedError {
         case loginRequired
@@ -306,50 +305,6 @@ public struct OpenAIDashboardFetcher {
     /// Fetches optional subscription metadata independently of the dashboard result.
     /// Callers can return usage promptly, then apply this result only after re-checking
     /// account authority.
-    public func fetchSubscriptionMetadata(
-        accountEmail: String?,
-        cacheScope: CookieHeaderCache.Scope? = nil,
-        logger: ((String) -> Void)? = nil,
-        timeout: TimeInterval = 8) async -> OpenAISubscriptionFetchResult
-    {
-        let deadline = Self.deadline(startingAt: Date(), timeout: timeout)
-        let logLine: (String) -> Void = { logger?($0) }
-        let websiteDataStore = OpenAIDashboardWebsiteDataStore.store(
-            forAccountEmail: accountEmail,
-            scope: cacheScope)
-        guard let cookieHeader = try? await Self.chatGPTCookieHeader(
-            in: websiteDataStore,
-            deadline: deadline)
-        else {
-            logLine("subscription metadata unavailable: cookies unavailable")
-            return .unavailable
-        }
-
-        let apiResult = await Self.fetchSubscriptionFromAPI(
-            cookieHeader: cookieHeader,
-            deadline: min(deadline, Date().addingTimeInterval(2)),
-            logger: logLine)
-        guard !apiResult.succeeded, Date() < deadline else { return apiResult }
-
-        do {
-            let lease = try await self.makeWebView(
-                websiteDataStore: websiteDataStore,
-                logger: logger,
-                timeout: Self.requiredRemainingTimeout(until: deadline))
-            defer { lease.release() }
-            logLine("subscription metadata billing fallback start after dashboard result")
-            return try await (OpenAISubscription.fetch(
-                lease.webView,
-                deadline: deadline,
-                logger: lease.log))
-        } catch is CancellationError {
-            return .unavailable
-        } catch {
-            logLine("subscription metadata unavailable: \(error.localizedDescription)")
-            return .unavailable
-        }
-    }
-
     public func clearSessionData(
         accountEmail: String?,
         cacheScope: CookieHeaderCache.Scope? = nil) async
@@ -691,8 +646,7 @@ public struct OpenAIDashboardFetcher {
         logger: @escaping (String) -> Void)
         async throws -> (
             apiData: DashboardAPIData?,
-            verifiedSignedInEmail: String?,
-            cookieHeader: String)
+            verifiedSignedInEmail: String?)
     {
         let cookieHeader = try await self.chatGPTCookieHeader(in: websiteDataStore, deadline: deadline)
         let apiData = await self.fetchDashboardUsageAPI(
@@ -710,7 +664,7 @@ public struct OpenAIDashboardFetcher {
         if apiData?.hasUsageData == true, verifiedEmail != nil {
             logger("usage api supplied verified dashboard data")
         }
-        return (apiData, verifiedEmail, cookieHeader)
+        return (apiData, verifiedEmail)
     }
 
     private static func fetchDashboardUsageAPI(
@@ -839,7 +793,10 @@ public struct OpenAIDashboardFetcher {
         let activeUntil = (activeUntilValue as? String)
         let willRenew = (willRenewValue as? Bool)
         let activeUntilIsValid = activeUntilValue is NSNull || activeUntil != nil
-        let willRenewIsValid = willRenewValue is NSNull || willRenew != nil
+        let willRenewIsBoolean = (willRenewValue as? NSNumber).map {
+            CFGetTypeID($0) == CFBooleanGetTypeID()
+        } ?? false
+        let willRenewIsValid = willRenewValue is NSNull || willRenewIsBoolean
         guard activeUntilIsValid, willRenewIsValid else { return .unavailable }
 
         return OpenAISubscriptionMetadata.parseResult(
@@ -1196,6 +1153,56 @@ extension OpenAIDashboardFetcher {
         try Self.throwIfBlockingReadinessState(probe)
     }
 }
+
+extension OpenAIDashboardFetcher {
+    public func fetchSubscriptionMetadata(
+        accountEmail: String?,
+        cacheScope: CookieHeaderCache.Scope? = nil,
+        logger: ((String) -> Void)? = nil,
+        timeout: TimeInterval = 8) async -> OpenAISubscriptionFetchResult
+    {
+        guard !Task.isCancelled, timeout > 0 else { return .unavailable }
+        let deadline = Self.deadline(startingAt: Date(), timeout: timeout)
+        let logLine: (String) -> Void = { logger?($0) }
+        let websiteDataStore = OpenAIDashboardWebsiteDataStore.store(
+            forAccountEmail: accountEmail,
+            scope: cacheScope)
+        guard let cookieHeader = try? await Self.chatGPTCookieHeader(
+            in: websiteDataStore,
+            deadline: deadline)
+        else {
+            logLine("subscription metadata unavailable: cookies unavailable")
+            return .unavailable
+        }
+
+        guard !Task.isCancelled, Date() < deadline else { return .unavailable }
+        let apiResult = await Self.fetchSubscriptionFromAPI(
+            cookieHeader: cookieHeader,
+            deadline: min(deadline, Date().addingTimeInterval(2)),
+            logger: logLine)
+        guard !Task.isCancelled, Date() < deadline else { return .unavailable }
+        guard !apiResult.succeeded else { return apiResult }
+
+        do {
+            let lease = try await self.makeWebView(
+                websiteDataStore: websiteDataStore,
+                logger: logger,
+                timeout: Self.requiredRemainingTimeout(until: deadline))
+            defer { lease.release() }
+            logLine("subscription metadata billing fallback start after dashboard result")
+            return try await (OpenAISubscription.fetch(
+                lease.webView,
+                deadline: deadline,
+                logger: lease.log))
+        } catch is CancellationError {
+            return .unavailable
+        } catch {
+            logLine("subscription metadata unavailable: \(error.localizedDescription)")
+            return .unavailable
+        }
+    }
+}
+
 #else
 import Foundation
 
