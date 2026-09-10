@@ -222,6 +222,10 @@ is limited, using additional rows when needed.
     checkpoints until each file is refreshed.
   - Native Codex logs parse `event_msg` token_count entries and `turn_context` model markers; when both are present,
     `turn_context` is authoritative for the model bucket.
+  - A subagent's `subagent_history_start_ordinal` is authoritative: earlier records are inherited context, even if
+    they contain delivery markers or the file ends before child-owned history arrives. Later appends count only
+    the child's own deltas. Older per-file parser revisions refresh through the normal scan budget while stored
+    history and checkpoints remain available.
   - pi and OMP sessions count assistant-message usage rows and attribute `openai-codex` assistant usage to Codex.
   - pi-compatible assistant usage is bucketed by assistant-turn timestamp, so mixed-model sessions can contribute to
     multiple days/models correctly.
@@ -232,7 +236,9 @@ is limited, using additional rows when needed.
   - Native session store: `~/Library/Caches/CodexBar/cost-usage/cost-usage.sqlite`
   - pi-compatible session cache: `~/Library/Caches/CodexBar/cost-usage/pi-sessions-v8.json`
     is replaced atomically on macOS and Linux, retaining complete cached scan state across refreshes.
-  - Catch-up status reads progress metadata without loading historical usage JSON or replay bodies. Cached reports
+  - Catch-up status reads progress metadata without loading historical usage JSON or replay bodies. Cached token
+    activity reads scoped daily aggregates without decoding individual usage events, retaining account, time zone,
+    coverage, and incomplete-scan checks. Cached reports
     retain row-level pricing evidence and project/session details, but omit raw token snapshots, accumulator state,
     and replay bodies. File cursor metadata, including JSONL resume state, remains available for progress tracking.
     A native scan loads exact usage rows once, deferring raw token history and checkpoints until a file changes
