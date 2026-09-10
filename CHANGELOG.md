@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.58.1 — Unreleased
+
+### Fixed
+- Menus: refresh cached status menus when macOS appearance changes, including previously opened submenus, so the first opening matches Light/Dark and accessibility appearances (#3526). Thanks @emanuelst!
+
 ## 0.58.0 — 2026-09-09
 
 ### Highlights
