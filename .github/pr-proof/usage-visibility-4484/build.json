@@ -1,0 +1,11 @@
+{
+  "featureCommit": "11492b990ce69c36272c8c50a1e52d128dd422c6",
+  "proofBinarySHA256": "4507af46b12a6046f63dac8ab40a3907f33cb4717ede976e863de9f571b4c657",
+  "configuration": "Debug",
+  "entryPoint": "CodexBarEntryPoint with local synthetic proof hook",
+  "providerData": "synthetic",
+  "appAppearance": "Aqua for readable captures",
+  "keychainAccess": false,
+  "liveTransports": false,
+  "shippedInUpstreamDiff": false
+}

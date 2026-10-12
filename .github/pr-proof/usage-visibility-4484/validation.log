@@ -1,0 +1,58 @@
+codexbar-4484-review-tests-final.log
+􀟈  Test "plan dates add a row only in detailed overview when quotas are present" started.
+􀟈  Test case passing 1 argument provider → .codex to "plan dates add a row only in detailed overview when quotas are present" started.
+􀟈  Test case passing 1 argument provider → .claude to "plan dates add a row only in detailed overview when quotas are present" started.
+􁁛  Test "plan dates add a row only in detailed overview when quotas are present" with 2 test cases passed after 0.018 seconds.
+compatibility: pre-split config hiddenItems=true optionalUsage=true; loaded, old IDs and provider fields retained, independent choices survived reload; PASS
+compatibility: pre-split config hiddenItems=true optionalUsage=false; loaded, old IDs and provider fields retained, independent choices survived reload; PASS
+compatibility: pre-split config hiddenItems=false optionalUsage=true; loaded, old IDs and provider fields retained, independent choices survived reload; PASS
+compatibility: pre-split config hiddenItems=false optionalUsage=false; loaded, old IDs and provider fields retained, independent choices survived reload; PASS
+􁁛  Test run with 130 tests in 8 suites passed after 7.522 seconds.
+
+codexbar-4484-compact-before.log
+􀟈  Test "plan dates add a row only in detailed overview when quotas are present" started.
+􀟈  Test case passing 1 argument provider → .codex to "plan dates add a row only in detailed overview when quotas are present" started.
+􀢄  Test "plan dates add a row only in detailed overview when quotas are present" recorded an issue with 1 argument provider → .codex at CompactOverviewTests.swift:64:9: Expectation failed: abs(Self.height(model, layout: .compact) - Self.height(withoutDate, layout: .compact)) < 1
+􀟈  Test case passing 1 argument provider → .claude to "plan dates add a row only in detailed overview when quotas are present" started.
+􀢄  Test "plan dates add a row only in detailed overview when quotas are present" recorded an issue with 1 argument provider → .claude at CompactOverviewTests.swift:64:9: Expectation failed: abs(Self.height(model, layout: .compact) - Self.height(withoutDate, layout: .compact)) < 1
+􀢄  Test "plan dates add a row only in detailed overview when quotas are present" with 2 test cases failed after 0.106 seconds with 2 issues.
+􀢄  Test run with 5 tests in 1 suite failed after 0.162 seconds with 2 issues.
+
+codexbar-4484-compact-after.log
+􀟈  Test "plan dates add a row only in detailed overview when quotas are present" started.
+􀟈  Test case passing 1 argument provider → .codex to "plan dates add a row only in detailed overview when quotas are present" started.
+􀟈  Test case passing 1 argument provider → .claude to "plan dates add a row only in detailed overview when quotas are present" started.
+􁁛  Test "plan dates add a row only in detailed overview when quotas are present" with 2 test cases passed after 0.087 seconds.
+compatibility: pre-split config hiddenItems=true optionalUsage=true; loaded, old IDs and provider fields retained, independent choices survived reload; PASS
+compatibility: pre-split config hiddenItems=true optionalUsage=false; loaded, old IDs and provider fields retained, independent choices survived reload; PASS
+compatibility: pre-split config hiddenItems=false optionalUsage=true; loaded, old IDs and provider fields retained, independent choices survived reload; PASS
+compatibility: pre-split config hiddenItems=false optionalUsage=false; loaded, old IDs and provider fields retained, independent choices survived reload; PASS
+􁁛  Test run with 56 tests in 3 suites passed after 2.539 seconds.
+
+Full suite initial run
+Swift test timing summary:
+- Shard: none
+- Execution mode: direct
+- Workers: 4
+- Group size: 12
+- Discovered selections: 1664
+- Selected selections: 1664
+- Selected groups: 150
+- First-pass successful groups: 133
+- First-pass failed groups: 1
+- Full-group retries: 1
+- Recovered groups: 0
+- Timed out groups: 0
+- Isolated selection retries: 0
+- Discovery seconds: 5.2
+- Execution seconds: 305.1
+- Total seconds: 314.1
+
+
+Resume
+Byte-identical group selections verified; resuming original groups: [135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150]
+Resume result: {'selected': 16, 'passed': 16, 'timedOut': 0}
+
+Read-only Foundation probe
+fresh Foundation suite Item-0 = Optional(1000)
+fresh Foundation suite Item-1 = Optional(1000)

@@ -1,0 +1,8 @@
+--- a/Sources/CodexBar/CodexBarApp.swift
++++ b/Sources/CodexBar/CodexBarApp.swift
+@@
+         #if DEBUG
++        if UsageVisibilityProofApp.runIfRequested() {
++            return
++        }
+         if MenuBarLayoutNativeProof.runIfRequested() {
