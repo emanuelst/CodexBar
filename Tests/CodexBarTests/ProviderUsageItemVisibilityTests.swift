@@ -1,3 +1,4 @@
+import AppKit
 import CodexBarCore
 import Foundation
 import Observation
@@ -7,6 +8,80 @@ import Testing
 
 @MainActor
 struct ProviderUsageItemVisibilityTests {
+    @Test
+    func `claude independently selects resets extra usage and subscription without losing quota notes`() {
+        var model = Self.model(provider: .claude, metricIDs: ["primary", "secondary"], showsResetCredits: true)
+        model.providerCost = .init(title: "Extra usage", percentUsed: 10, spendLine: "$1 / $10", percentLine: nil)
+        model.subscriptionNotes = ["Renews: Nov 5, 2026"]
+        model.usageNotes = ["Usage estimate", "Renews: Nov 5, 2026"]
+        let items = model.usageItemDescriptors
+        #expect(items.contains { $0.id == .claudeResetCredits && !$0.requiresOptionalUsage })
+        #expect(items.contains { $0.id == .claudeExtraUsage && $0.requiresOptionalUsage })
+        #expect(items.contains { $0.id == .subscription && !$0.requiresOptionalUsage })
+        #expect(model.quotaSubscriptionNotes == ["Renews: Nov 5, 2026"])
+        #expect(model.supplementalUsageNotes == ["Usage estimate"])
+
+        let hidden = model.applyingUsageItemVisibility(hiddenItemIDs: [.claudeExtraUsage, .subscription])
+        #expect(hidden.providerCost == nil)
+        #expect(hidden.limitResetCredits != nil)
+        #expect(hidden.metrics.count == 2)
+        #expect(hidden.subscriptionNotes.isEmpty)
+        #expect(hidden.usageNotes == ["Usage estimate"])
+        #expect(model.applyingUsageItemVisibility(hiddenItemIDs: [.claudeResetCredits]).limitResetCredits == nil)
+        #expect(model.applyingUsageItemVisibility(hiddenItemIDs: [.codexResetCredits]).limitResetCredits != nil)
+        model.providerCost = .init(title: "API spend", percentUsed: nil, spendLine: "$10", percentLine: nil)
+        #expect(model.applyingUsageItemVisibility(hiddenItemIDs: [.claudeExtraUsage]).providerCost != nil)
+    }
+
+    @Test
+    func `new visibility controls retain recognizable unavailable labels`() {
+        #expect(ProviderUsageItemID.claudeResetCredits.unreportedTitle(for: .claude) == "Limit Reset Credits")
+        #expect(ProviderUsageItemID.claudeExtraUsage.unreportedTitle(for: .claude) == "Extra usage")
+        #expect(ProviderUsageItemID.subscription.unreportedTitle(for: .codex) == "Plan renewal / expiry")
+    }
+
+    @Test
+    func `render synthetic usage visibility proof when requested`() throws {
+        guard let path = ProcessInfo.processInfo.environment["CODEXBAR_VISIBILITY_PROOF_DIR"] else { return }
+        let directory = URL(fileURLWithPath: path, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        var model = Self.model(provider: .claude, metricIDs: ["Session", "secondary"], showsResetCredits: true)
+        model.providerCost = .init(title: "Extra usage", percentUsed: 10, spendLine: "$1 / $10", percentLine: nil)
+        model.cloudCredits = .inlineBalance(title: "Cloud credits", value: "$100.00")
+        model.subscriptionNotes = ["Renews: Nov 5, 2026"]
+        model.usageNotes = model.subscriptionNotes
+        let settings = Self.settings(
+            defaults: InMemoryUserDefaults(),
+            configStore: testConfigStore(suiteName: "visibility-proof-\(UUID().uuidString)"))
+        defer { settings.configFileWatcher?.stop() }
+        for enabled in [true, false] {
+            settings.showOptionalCreditsAndExtraUsage = enabled
+            var displayed = model
+            if !enabled {
+                displayed.providerCost = nil
+                displayed.cloudCredits = nil
+            }
+            let root = VStack(alignment: .leading, spacing: 20) {
+                Text(enabled ? "Global optional usage ON" : "Global optional usage OFF").font(.headline)
+                UsageMenuCardView(model: displayed, width: 360)
+                Form {
+                    ProviderUsageItemVisibilitySettingsView(
+                        provider: .claude,
+                        settings: settings,
+                        items: model.usageItemDescriptors)
+                }.formStyle(.grouped).frame(width: 600, height: 420)
+            }.padding(20)
+            let hosting = NSHostingView(rootView: root
+                .environment(\.locale, Locale(identifier: "en_US_POSIX"))
+                .environment(\.colorScheme, .light)
+                .environment(\.displayScale, 2)
+                .background(Color(nsColor: .windowBackgroundColor)))
+            hosting.appearance = NSAppearance(named: .aqua)
+            try #require(MenuLayoutScreenshotRenderTests.pngDataWithWindow(hosting: hosting))
+                .write(to: directory.appendingPathComponent(enabled ? "claude-global-on.png" : "claude-global-off.png"))
+        }
+    }
+
     @Test
     func `cosmetic edits preserve account caches spend ownership and synced refresh state`() throws {
         let defaults = InMemoryUserDefaults()

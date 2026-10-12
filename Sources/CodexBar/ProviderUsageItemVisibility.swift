@@ -18,6 +18,9 @@ struct ProviderUsageItemID: Hashable, Sendable {
 
     static let credits = Self(rawValue: "section:credits")
     static let codexResetCredits = Self(rawValue: "section:codex-reset-credits")
+    static let claudeResetCredits = Self(rawValue: "section:claude-reset-credits")
+    static let claudeExtraUsage = Self(rawValue: "section:claude-extra-usage")
+    static let subscription = Self(rawValue: "section:subscription")
 
     static func metric(_ metricID: String) -> Self {
         Self(rawValue: "\(self.metricPrefix)\(metricID)")
@@ -31,6 +34,7 @@ struct ProviderUsageItemID: Hashable, Sendable {
 struct ProviderUsageItemDescriptor: Identifiable, Equatable, Sendable {
     let id: ProviderUsageItemID
     let title: String
+    var requiresOptionalUsage: Bool = false
 }
 
 extension ProviderUsageItemID {
@@ -39,7 +43,9 @@ extension ProviderUsageItemID {
     func unreportedTitle(for provider: UsageProvider) -> String {
         switch self {
         case .credits: return L("Credits")
-        case .codexResetCredits: return L("Limit Reset Credits")
+        case .codexResetCredits, .claudeResetCredits: return L("Limit Reset Credits")
+        case .claudeExtraUsage: return L("Extra usage")
+        case .subscription: return L("Plan renewal / expiry")
         default:
             if let detailSectionTitle {
                 return L(detailSectionTitle)
@@ -64,6 +70,14 @@ extension ProviderUsageItemID {
 }
 
 extension UsageMenuCardView.Model {
+    var quotaSubscriptionNotes: [String] {
+        self.provider == .codex || self.provider == .claude ? self.subscriptionNotes : []
+    }
+
+    var supplementalUsageNotes: [String] {
+        self.usageNotes.filter { !self.quotaSubscriptionNotes.contains($0) }
+    }
+
     @MainActor
     var usageItemDescriptors: [ProviderUsageItemDescriptor] {
         var descriptors = self.metrics.map { metric in
@@ -71,14 +85,23 @@ extension UsageMenuCardView.Model {
                 id: .metric(metric.id),
                 title: UsageMenuCardView.popupMetricTitle(provider: self.provider, metric: metric))
         }
+        if !self.quotaSubscriptionNotes.isEmpty {
+            descriptors.append(.init(id: .subscription, title: L("Plan renewal / expiry")))
+        }
         // Provider-specific by design: Codex reset credits are a non-metric section with their own visibility choice.
         if self.provider == .codex, self.limitResetCredits != nil {
             descriptors.append(ProviderUsageItemDescriptor(
                 id: .codexResetCredits,
                 title: L("Limit Reset Credits")))
         }
+        if self.provider == .claude, self.limitResetCredits != nil {
+            descriptors.append(.init(id: .claudeResetCredits, title: L("Limit Reset Credits")))
+        }
         if self.creditsText != nil {
-            descriptors.append(ProviderUsageItemDescriptor(id: .credits, title: L("Credits")))
+            descriptors.append(ProviderUsageItemDescriptor(
+                id: .credits,
+                title: L("Credits"),
+                requiresOptionalUsage: true))
         }
         let costSummaryTitles = ProviderDescriptorRegistry
             .descriptor(for: self.provider).presentation.optionalDetails.costSummaryTitles
@@ -92,7 +115,12 @@ extension UsageMenuCardView.Model {
         if let cloudCredits = self.cloudCredits {
             descriptors.append(ProviderUsageItemDescriptor(
                 id: .detailSection(ClaudeCloudCreditsSnapshot.detailTitle),
-                title: cloudCredits.title))
+                title: cloudCredits.title,
+                requiresOptionalUsage: true))
+        }
+
+        if self.provider == .claude, self.providerCost?.title == L("Extra usage") {
+            descriptors.append(.init(id: .claudeExtraUsage, title: L("Extra usage"), requiresOptionalUsage: true))
         }
 
         var seen = Set<ProviderUsageItemID>()
@@ -117,7 +145,9 @@ extension UsageMenuCardView.Model {
             let title = PersonalInfoRedactor.redactEmails(in: rawTitle, isEnabled: hidePersonalInfo) ?? rawTitle
             descriptors.append(ProviderUsageItemDescriptor(
                 id: itemID,
-                title: L("%@ (unavailable)", title)))
+                title: L("%@ (unavailable)", title),
+                requiresOptionalUsage: itemID == .credits || itemID == .claudeExtraUsage ||
+                    itemID == .detailSection(ClaudeCloudCreditsSnapshot.detailTitle)))
         }
         return descriptors
     }
@@ -134,7 +164,18 @@ extension UsageMenuCardView.Model {
             projected.creditsHintText = nil
             projected.creditsHintCopyText = nil
         }
-        if hiddenItemIDs.contains(.codexResetCredits) {
+        if hiddenItemIDs.contains(.claudeExtraUsage), self.provider == .claude,
+           self.providerCost?.title == L("Extra usage")
+        {
+            projected.providerCost = nil
+        }
+        if hiddenItemIDs.contains(.subscription), !self.quotaSubscriptionNotes.isEmpty {
+            projected.usageNotes.removeAll { self.subscriptionNotes.contains($0) }
+            projected.subscriptionNotes = []
+        }
+        if (self.provider == .codex && hiddenItemIDs.contains(.codexResetCredits)) ||
+            (self.provider == .claude && hiddenItemIDs.contains(.claudeResetCredits))
+        {
             projected.limitResetCredits = nil
         }
         let hiddenTitles = Set(hiddenItemIDs.compactMap(\.detailSectionTitle))

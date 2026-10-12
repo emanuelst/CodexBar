@@ -2519,3 +2519,9 @@
 "Required. The ws_… ID of the workspace the key can bill. Or set FLORA_WORKSPACE_ID." = "Zorunlu. Anahtarın faturalayabildiği çalışma alanının ws_… kimliği. Ya da FLORA_WORKSPACE_ID değerini ayarlayın.";
 "ak_…" = "ak_…";
 "ws_…" = "ws_…";
+
+/* English fallback pending translation. */
+"Plan renewal / expiry" = "Plan renewal / expiry";
+
+/* English fallback pending translation. */
+"Hidden by the global optional credits, spending & billing setting." = "Hidden by the global optional credits, spending & billing setting.";
