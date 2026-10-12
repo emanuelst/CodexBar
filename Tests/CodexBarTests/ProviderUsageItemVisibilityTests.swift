@@ -9,6 +9,38 @@ import Testing
 @MainActor
 struct ProviderUsageItemVisibilityTests {
     @Test
+    func `globally gated quota rows retain their explanation when unavailable`() {
+        for (provider, optionalIDs) in [
+            (UsageProvider.codex, ["codex-spark", "codex-spark-weekly", "codex-extra-quota", "monthly"]),
+            (.claude, ["claude-routines"]),
+        ] {
+            let model = Self.model(provider: provider, metricIDs: ["primary", "secondary"] + optionalIDs)
+            let items = model.usageItemDescriptors
+            #expect(items.filter(\.requiresOptionalUsage).map(\.id) == optionalIDs.map(ProviderUsageItemID.metric))
+            let unavailable = Self.model(provider: provider, metricIDs: ["primary", "secondary"])
+                .usageItemDescriptors(includingHidden: Set(optionalIDs.map(ProviderUsageItemID.metric)))
+            #expect(unavailable.filter(\.requiresOptionalUsage).count == optionalIDs.count)
+            #expect(!ProviderUsageItemID.subscription.requiresOptionalUsage(for: provider))
+        }
+    }
+
+    @Test
+    func `detail row explanations follow provider optional visibility policy`() throws {
+        let model = try Self.model(provider: .deepseek, metricIDs: ["primary"], detailSections: [
+            ProviderDetailSection(title: "Quota details", rows: [.init(label: "Remaining", value: "50")]),
+        ])
+        #expect(model.usageItemDescriptors.filter(\.requiresOptionalUsage).map(\.id) == [
+            .detailSection("Quota details"),
+        ])
+        let unavailable = Self.model(provider: .minimax, metricIDs: ["primary"])
+            .usageItemDescriptors(includingHidden: [.detailSection("Billing history")])
+        #expect(unavailable.last?.requiresOptionalUsage == true)
+        #expect(!ProviderUsageItemID.detailSection("Quota details").requiresOptionalUsage(for: .minimax))
+        #expect(!ProviderUsageItemID.metric("claude-routines").requiresOptionalUsage(for: .codex))
+        #expect(!ProviderUsageItemID.metric("codex-spark").requiresOptionalUsage(for: .claude))
+    }
+
+    @Test
     func `claude independently selects resets extra usage and subscription without losing quota notes`() {
         var model = Self.model(provider: .claude, metricIDs: ["primary", "secondary"], showsResetCredits: true)
         model.providerCost = .init(title: "Extra usage", percentUsed: 10, spendLine: "$1 / $10", percentLine: nil)

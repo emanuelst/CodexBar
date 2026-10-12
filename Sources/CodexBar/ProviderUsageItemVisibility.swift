@@ -38,6 +38,21 @@ struct ProviderUsageItemDescriptor: Identifiable, Equatable, Sendable {
 }
 
 extension ProviderUsageItemID {
+    @MainActor
+    func requiresOptionalUsage(for provider: UsageProvider) -> Bool {
+        if self == .credits || (provider == .claude && self == .claudeExtraUsage) {
+            return true
+        }
+        if let metricID = self.metricID {
+            // CodexAdditionalRateLimitMapper assigns the codex- prefix to optional extra limits.
+            return (provider == .codex && (metricID.hasPrefix("codex-") || metricID == "monthly")) ||
+                (provider == .claude && metricID == "claude-routines")
+        }
+        guard let rawTitle = self.detailSectionTitle else { return false }
+        let policy = ProviderDescriptorRegistry.descriptor(for: provider).presentation.optionalDetails
+        return policy.hidesAllWithoutOptionalUsage || policy.hiddenTitlesWithoutOptionalUsage.contains(rawTitle)
+    }
+
     /// Label used when the provider is not reporting the item right now, so the settings row still
     /// names something recognizable instead of falling back to a raw storage key.
     func unreportedTitle(for provider: UsageProvider) -> String {
@@ -84,7 +99,8 @@ extension UsageMenuCardView.Model {
         var descriptors = self.metrics.map { metric in
             ProviderUsageItemDescriptor(
                 id: .metric(metric.id),
-                title: UsageMenuCardView.popupMetricTitle(provider: self.provider, metric: metric))
+                title: UsageMenuCardView.popupMetricTitle(provider: self.provider, metric: metric),
+                requiresOptionalUsage: ProviderUsageItemID.metric(metric.id).requiresOptionalUsage(for: self.provider))
         }
         if !self.quotaSubscriptionNotes.isEmpty {
             descriptors.append(.init(id: .subscription, title: L("Plan renewal / expiry")))
@@ -109,7 +125,11 @@ extension UsageMenuCardView.Model {
         descriptors.append(contentsOf: zip(self.providerDetails, self.providerDetailRawTitles)
             .compactMap { section, rawTitle in
                 guard let rawTitle, let title = section.title, !costSummaryTitles.contains(rawTitle) else { return nil }
-                return ProviderUsageItemDescriptor(id: .detailSection(rawTitle), title: title)
+                let itemID = ProviderUsageItemID.detailSection(rawTitle)
+                return ProviderUsageItemDescriptor(
+                    id: itemID,
+                    title: title,
+                    requiresOptionalUsage: itemID.requiresOptionalUsage(for: self.provider))
             })
 
         // Provider-specific by design: Claude cloud credits keep their detail-section ID outside the generic list.
@@ -147,8 +167,7 @@ extension UsageMenuCardView.Model {
             descriptors.append(ProviderUsageItemDescriptor(
                 id: itemID,
                 title: L("%@ (unavailable)", title),
-                requiresOptionalUsage: itemID == .credits || itemID == .claudeExtraUsage ||
-                    itemID == .detailSection(ClaudeCloudCreditsSnapshot.detailTitle)))
+                requiresOptionalUsage: itemID.requiresOptionalUsage(for: self.provider)))
         }
         return descriptors
     }
