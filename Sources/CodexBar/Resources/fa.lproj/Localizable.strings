@@ -2521,8 +2521,6 @@
 "ak_…" = "ak_…";
 "ws_…" = "ws_…";
 
-/* English fallback pending translation. */
-"Plan renewal / expiry" = "Plan renewal / expiry";
+"Plan renewal / expiry" = "تمدید / انقضای طرح";
 
-/* English fallback pending translation. */
-"Hidden by the global optional credits, spending & billing setting." = "Hidden by the global optional credits, spending & billing setting.";
+"Hidden by the global optional credits, spending & billing setting." = "با تنظیم عمومی اعتبارهای اختیاری، هزینه‌ها و صورتحساب پنهان شده است.";

@@ -2521,8 +2521,6 @@
 "ak_…" = "ak_…";
 "ws_…" = "ws_…";
 
-/* English fallback pending translation. */
-"Plan renewal / expiry" = "Plan renewal / expiry";
+"Plan renewal / expiry" = "Rinnovo / scadenza del piano";
 
-/* English fallback pending translation. */
-"Hidden by the global optional credits, spending & billing setting." = "Hidden by the global optional credits, spending & billing setting.";
+"Hidden by the global optional credits, spending & billing setting." = "Nascosto dall’impostazione globale per crediti opzionali, spese e fatturazione.";

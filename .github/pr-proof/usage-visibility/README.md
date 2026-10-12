@@ -50,11 +50,14 @@ The repository runner suppresses test Keychain access. No real provider probes w
 - Focused regression run: 151 tests in 25 suites passed.
 - Native proof/visibility run: 22 tests in one suite passed.
 - `make check`: passed; zero SwiftLint violations across 2,958 files.
-- Full `make test`: started; result pending at initial PR creation.
+- Additional production-context regression: six UsageStore tests passed.
+- Initial serial full `make test`: 90 groups passed, then Italian localization rejected English fallback strings.
+  The strings are now translated; 95 localization, provider-boundary and production-context tests pass.
+- Final `make check`: passes with zero violations. Full four-worker rerun is in progress.
 
 ## Limits
 
-New checkbox/help strings have explicitly marked English fallback entries in other app locales;
-translations need review. The revised global-setting wording is English only in this patch.
+New checkbox/help strings are translated in all app locales. These translations still need linguistic review.
+The revised global-setting wording is English only in this patch.
 The installed development app was not replaced; unrelated CodexBar-dev changes remain intact.
 The native renders validate component layout, not an end-to-end live-account session.

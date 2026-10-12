@@ -2510,8 +2510,6 @@
 "ak_…" = "ak_…";
 "ws_…" = "ws_…";
 
-/* English fallback pending translation. */
-"Plan renewal / expiry" = "Plan renewal / expiry";
+"Plan renewal / expiry" = "套餐续订 / 到期";
 
-/* English fallback pending translation. */
-"Hidden by the global optional credits, spending & billing setting." = "Hidden by the global optional credits, spending & billing setting.";
+"Hidden by the global optional credits, spending & billing setting." = "已被可选额度、支出和账单详情的全局设置隐藏。";

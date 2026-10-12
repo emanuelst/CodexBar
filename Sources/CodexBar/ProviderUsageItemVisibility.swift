@@ -71,6 +71,7 @@ extension ProviderUsageItemID {
 
 extension UsageMenuCardView.Model {
     var quotaSubscriptionNotes: [String] {
+        // Provider-specific by design: Codex and Claude place their plan dates beside quota windows.
         self.provider == .codex || self.provider == .claude ? self.subscriptionNotes : []
     }
 
@@ -164,6 +165,7 @@ extension UsageMenuCardView.Model {
             projected.creditsHintText = nil
             projected.creditsHintCopyText = nil
         }
+        // Provider-specific by design: Claude Extra usage excludes Admin API spend; reset choices stay provider-owned.
         if hiddenItemIDs.contains(.claudeExtraUsage), self.provider == .claude,
            self.providerCost?.title == L("Extra usage")
         {
