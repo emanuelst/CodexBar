@@ -249,6 +249,9 @@ remains available with an explanation; checking it does not override the global 
 
 Codex and Claude have separate **Limit Reset Credits** and **Plan renewal / expiry** choices. These are
 independent of the global switch. Plan dates appear immediately after the quota rows, before reset credits.
+Compact Overview still omits plan dates when quota bars are present. On upgrade, a previously disabled
+global switch initializes Claude's reset-credit choice to hidden; users can then enable it independently.
+The one-time migration preserves other saved choices and travels with provider settings through sync.
 Claude also has an **Extra usage** checkbox; it does not hide Admin API spend. Cloud credits retain their
 existing independent checkbox and remain subject to the global switch. Menu cards, Settings previews, and
 Overview use the same visibility projection. Fetching, history, alerts, and CLI output are unchanged.

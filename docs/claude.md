@@ -312,8 +312,9 @@ the cookie import.
   - Requires `eligible: true`. A grant with an unreadable `resets_left`, `resets_total`, `paused`, `starts_at`, or
     `ends_at` is dropped. More than 50 available resets or more than 200 grant records show nothing. The usage
     windows are unaffected either way.
-  - Menu: a live `Limit Reset Credits` section behind the global optional credits and extra usage setting. CLI and
-    `codexbar serve`: a `Limit Reset Credits` row in `usage.details` (`N available`, next expiry).
+  - Menu: a live `Limit Reset Credits` section with its own visibility choice. An upgrade preserves a previously
+    disabled global optional-usage preference by initially hiding this section; it can then be enabled independently.
+    CLI and `codexbar serve`: a `Limit Reset Credits` row in `usage.details` (`N available`, next expiry).
   - Live-only: grant IDs are never decoded, the usage request skips the URL cache, and cached or synced snapshots do
     not restore the inventory. A reset used on claude.ai disappears at the next successful refresh.
   - Source precedence stays unchanged: credits appear only from the source supplying the primary usage snapshot. CLI

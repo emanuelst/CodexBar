@@ -638,7 +638,9 @@ private struct UsageMenuCardUsageContentView: View {
             } else {
                 self.metricRows(self.model.metrics)
             }
-            if !self.model.quotaSubscriptionNotes.isEmpty {
+            if !self.model.quotaSubscriptionNotes.isEmpty,
+               self.model.showsOverviewSupplementalContent(compact: self.compactMetrics)
+            {
                 UsageNotesContent(notes: self.model.quotaSubscriptionNotes)
             }
             if let resetCredits = self.model.limitResetCredits {
