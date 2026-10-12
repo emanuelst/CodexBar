@@ -62,7 +62,9 @@ struct ProvidersPane: View {
                 }
             }
         } : nil
-        let usageItems = ((overview?.usageItems ?? []) + unfilteredModel.usageItemDescriptors(
+        let visibilityModel = UsageMenuCardView.Model.make(self.store.menuCardInput(
+            for: self.provider, context: .settings, optionalUsageOverride: true))
+        let usageItems = ((overview?.usageItems ?? []) + visibilityModel.usageItemDescriptors(
             includingHidden: self.settings.hiddenUsageItemIDs(for: self.provider),
             hidePersonalInfo: self.settings.hidePersonalInfo))
             .reduce(into: [ProviderUsageItemDescriptor]()) { items, item in

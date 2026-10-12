@@ -557,3 +557,10 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
   `Sources/CodexBarCore/PiSessionCostScanner.swift`,
   `Sources/CodexBarCore/PiSessionCostCache.swift`,
   `Sources/CodexBarCore/Vendored/CostUsage/*`
+
+### Displaying resets and billing details
+
+Saved limit resets are independent of the global optional billing switch. Use **Visible usage items →
+Limit Reset Credits** to hide them. **Extra usage** and **Cloud credits** have individual checkboxes but
+also require the global optional billing switch. **Plan renewal / expiry** is independent and appears
+below Session/Weekly, before saved resets. These controls affect presentation only.

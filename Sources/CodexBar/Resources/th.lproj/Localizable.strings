@@ -2519,3 +2519,7 @@
 "Required. The ws_… ID of the workspace the key can bill. Or set FLORA_WORKSPACE_ID." = "จำเป็น ID ws_… ของเวิร์กสเปซที่คีย์เรียกเก็บเงินได้ หรือตั้งค่า FLORA_WORKSPACE_ID";
 "ak_…" = "ak_…";
 "ws_…" = "ws_…";
+
+"Plan renewal / expiry" = "การต่ออายุ / วันหมดอายุแพ็กเกจ";
+
+"Hidden by the global optional credits, spending & billing setting." = "ซ่อนโดยการตั้งค่าส่วนกลางสำหรับเครดิตเสริม ค่าใช้จ่าย และข้อมูลการเรียกเก็บเงิน";

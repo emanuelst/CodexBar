@@ -2493,3 +2493,7 @@
 "Required. The ws_… ID of the workspace the key can bill. Or set FLORA_WORKSPACE_ID." = "必填。金鑰可計費的工作區 ws_… ID。或設定 FLORA_WORKSPACE_ID。";
 "ak_…" = "ak_…";
 "ws_…" = "ws_…";
+
+"Plan renewal / expiry" = "方案續訂 / 到期";
+
+"Hidden by the global optional credits, spending & billing setting." = "已被選用額度、支出和帳單詳情的全域設定隱藏。";
