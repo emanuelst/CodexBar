@@ -56,3 +56,8 @@ Resume result: {'selected': 16, 'passed': 16, 'timedOut': 0}
 Read-only Foundation probe
 fresh Foundation suite Item-0 = Optional(1000)
 fresh Foundation suite Item-1 = Optional(1000)
+
+
+Standalone make check confirmation
+Done linting! Found 0 violations, 0 serious in 2958 files.
+MAKE_CHECK_EXIT=0
