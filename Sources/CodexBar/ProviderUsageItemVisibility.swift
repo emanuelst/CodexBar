@@ -40,6 +40,7 @@ struct ProviderUsageItemDescriptor: Identifiable, Equatable, Sendable {
 extension ProviderUsageItemID {
     @MainActor
     func requiresOptionalUsage(for provider: UsageProvider) -> Bool {
+        // Provider-specific by design: Codex extra/monthly and Claude Extra usage/Routines follow global gates.
         if self == .credits || (provider == .claude && self == .claudeExtraUsage) {
             return true
         }
