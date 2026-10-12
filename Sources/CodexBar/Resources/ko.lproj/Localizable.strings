@@ -2484,3 +2484,7 @@
 "Required. The ws_… ID of the workspace the key can bill. Or set FLORA_WORKSPACE_ID." = "필수. 키가 결제할 수 있는 워크스페이스의 ws_… ID. 또는 FLORA_WORKSPACE_ID를 설정하세요.";
 "ak_…" = "ak_…";
 "ws_…" = "ws_…";
+
+"Plan renewal / expiry" = "요금제 갱신 / 만료";
+
+"Hidden by the global optional credits, spending & billing setting." = "선택적 크레딧, 지출 및 결제 정보의 전체 설정에 따라 숨겨져 있습니다.";

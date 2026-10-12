@@ -240,3 +240,15 @@ In each provider’s settings, **Visible usage items** selects which reported qu
 Usage-row visibility also filters compact account constraint details. Overall account headroom, severity, ordering, and recommendations continue to use all quotas.
 
 Visibility and accent-color changes preserve account cache identity and retained spend, including when the changes arrive through config reload or sync. Credential and endpoint changes still invalidate their previous usage ownership.
+
+### Optional billing visibility
+
+**Show optional credits, spending & billing details** is the global presentation switch. Per-provider
+**Visible usage items** choices still apply. When the global switch hides a supported item, its checkbox
+remains available with an explanation; checking it does not override the global setting.
+
+Codex and Claude have separate **Limit Reset Credits** and **Plan renewal / expiry** choices. These are
+independent of the global switch. Plan dates appear immediately after the quota rows, before reset credits.
+Claude also has an **Extra usage** checkbox; it does not hide Admin API spend. Cloud credits retain their
+existing independent checkbox and remain subject to the global switch. Menu cards, Settings previews, and
+Overview use the same visibility projection. Fetching, history, alerts, and CLI output are unchanged.

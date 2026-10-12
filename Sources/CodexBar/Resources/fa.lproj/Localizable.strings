@@ -2520,3 +2520,7 @@
 "Required. The ws_… ID of the workspace the key can bill. Or set FLORA_WORKSPACE_ID." = "الزامی. شناسه ws_… فضای کاری که کلید می‌تواند صورت‌حساب آن را ببیند. یا FLORA_WORKSPACE_ID را تنظیم کنید.";
 "ak_…" = "ak_…";
 "ws_…" = "ws_…";
+
+"Plan renewal / expiry" = "تمدید / انقضای طرح";
+
+"Hidden by the global optional credits, spending & billing setting." = "با تنظیم عمومی اعتبارهای اختیاری، هزینه‌ها و صورتحساب پنهان شده است.";
