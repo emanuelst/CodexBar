@@ -53,7 +53,13 @@ The repository runner suppresses test Keychain access. No real provider probes w
 - Additional production-context regression: six UsageStore tests passed.
 - Initial serial full `make test`: 90 groups passed, then Italian localization rejected English fallback strings.
   The strings are now translated; 95 localization, provider-boundary and production-context tests pass.
-- Final `make check`: passes with zero violations. Full four-worker rerun is in progress.
+- Final `make check`: passes with zero violations.
+- Full four-worker rerun: 133 groups passed; one group failed with eight placement assertions after a retry.
+  The runner stopped scheduling before the remaining 16 groups ran. No timeouts. This is not a fully green suite.
+- `StatusItemControllerSplitLifecycleTests` and its placement helper are unchanged from the upstream base.
+  `upstream-placement-repro.swift` embeds that exact baseline helper with only logging stubbed. Running
+  `swift -swift-version 6 -default-isolation MainActor .github/pr-proof/usage-visibility/upstream-placement-repro.swift`
+  prints `prepare=true, namedRemoved=true, legacyRemoved=false`, reproducing a failing baseline assertion.
 
 ## Limits
 
