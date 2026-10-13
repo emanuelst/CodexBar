@@ -141,8 +141,10 @@ extension UsageMenuCardView.Model {
                 requiresOptionalUsage: true))
         }
 
-        if self.provider == .claude, self.providerCost?.title == L("Extra usage") {
-            descriptors.append(.init(id: .claudeExtraUsage, title: L("Extra usage"), requiresOptionalUsage: true))
+        if self.provider == .claude, let cost = self.providerCost,
+           cost.title == L("Extra usage") || cost.title == L("Credits")
+        {
+            descriptors.append(.init(id: .claudeExtraUsage, title: cost.title, requiresOptionalUsage: true))
         }
 
         var seen = Set<ProviderUsageItemID>()
@@ -186,8 +188,8 @@ extension UsageMenuCardView.Model {
             projected.creditsHintCopyText = nil
         }
         // Provider-specific by design: Claude Extra usage excludes Admin API spend; reset choices stay provider-owned.
-        if hiddenItemIDs.contains(.claudeExtraUsage), self.provider == .claude,
-           self.providerCost?.title == L("Extra usage")
+        if hiddenItemIDs.contains(.claudeExtraUsage), self.provider == .claude, let cost = self.providerCost,
+           cost.title == L("Extra usage") || cost.title == L("Credits")
         {
             projected.providerCost = nil
         }

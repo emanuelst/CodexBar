@@ -563,5 +563,6 @@ Model-scoped weekly-window proof (synthetic data, no real accounts or credential
 
 Saved limit resets are independent of the global optional billing switch. Use **Visible usage items →
 Limit Reset Credits** to hide them. **Extra usage** and **Cloud credits** have individual checkboxes but
-also require the global optional billing switch. **Plan renewal / expiry** is independent and appears
+also require the global optional billing switch. A prepaid balance without a monthly cap uses the same
+Extra usage choice, labeled **Credits** while that balance is reported. **Plan renewal / expiry** is independent and appears
 below Session/Weekly, before saved resets. These controls affect presentation only.

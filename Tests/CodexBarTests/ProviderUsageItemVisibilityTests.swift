@@ -1,4 +1,3 @@
-import AppKit
 import CodexBarCore
 import Foundation
 import Observation
@@ -554,9 +553,6 @@ struct ProviderUsageItemVisibilityTests {
         #expect(restarted.isUsageItemVisible(.claudeResetCredits, for: .claude))
         #expect(restarted.hiddenUsageItemIDs(for: .claude) == oldIDs.union([.subscription]))
         #expect(restarted.providerConfig(for: .claude)?.claudeResetCreditsVisibilityMigrated == true)
-        print("compatibility: pre-split config hiddenItems=\(hasHiddenItems) "
-            + "optionalUsage=\(optionalUsageEnabled); loaded, old IDs and provider fields retained, "
-            + "independent choices survived reload; PASS")
     }
 
     @Test

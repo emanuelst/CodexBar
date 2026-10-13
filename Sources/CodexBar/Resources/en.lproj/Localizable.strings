@@ -640,7 +640,7 @@
 "highlight_menu_cards_on_hover_title" = "Highlight menu cards on hover";
 "show_provider_changelog_links_subtitle" = "Adds release-notes links for supported CLI-backed providers to the menu.";
 "show_credits_extra_usage_title" = "Show optional credits, spending & billing details";
-"show_credits_extra_usage_subtitle" = "Applies across providers. Individual visibility settings still apply. Limit reset credits and plan dates are controlled separately.";
+"show_credits_extra_usage_subtitle" = "Applies across providers. Individual visibility settings still apply. Codex and Claude limit reset credits and plan dates are controlled separately.";
 "multi_account_layout_title" = "Multi-account layout";
 "multi_account_layout_subtitle" = "Choose segmented account switching or stacked account cards.";
 "multi_account_layout_segmented" = "Segmented";
