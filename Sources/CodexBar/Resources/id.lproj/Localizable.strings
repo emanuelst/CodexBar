@@ -1414,6 +1414,7 @@
 "menu_bar_layout_preset_icon_only" = "Ikon saja";
 "menu_bar_layout_preset_percent_reset" = "Persentase + reset";
 "menu_bar_layout_preset_compact_stacked" = "Tumpukan ringkas";
+"menu_bar_layout_preset_bars_stacked" = "Batang progres bertumpuk";
 "menu_bar_layout_preset_custom" = "Kustom";
 "menu_bar_layout_live_preview" = "Pratinjau langsung";
 "menu_bar_layout_default_preview" = "Pratinjau tata letak default";
@@ -1553,6 +1554,7 @@
 "5-hour usage" = "Penggunaan 5 jam";
 "7-day usage" = "Penggunaan 7 hari";
 "Total usage" = "Total penggunaan";
+"claude_oauth_keychain_access_disabled" = "Akses Keychain dinonaktifkan, sehingga CodexBar tidak dapat membaca informasi masuk Claude.";
 "claude_oauth_keychain_access_revoked" = "Akses Rantai Kunci Claude dicabut akibat rotasi token Claude Code. Klik Segarkan untuk memberikan akses lagi, atau ubah sumber penggunaan Claude ke CLI/Web.";
 "claude_showing_last_known_usage" = "Menampilkan penggunaan terakhir yang diketahui, diambil %@.";
 "claude_limited_usage_detail" = "Rincian penggunaan terbatas";

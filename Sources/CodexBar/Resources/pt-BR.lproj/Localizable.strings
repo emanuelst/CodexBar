@@ -1411,6 +1411,7 @@
 "menu_bar_layout_preset_icon_only" = "Somente ícone";
 "menu_bar_layout_preset_percent_reset" = "Percentual e redefinição";
 "menu_bar_layout_preset_compact_stacked" = "Empilhado compacto";
+"menu_bar_layout_preset_bars_stacked" = "Barras de progresso empilhadas";
 "menu_bar_layout_preset_custom" = "Personalizado";
 "menu_bar_layout_live_preview" = "Prévia ao vivo";
 "menu_bar_layout_default_preview" = "Prévia do layout padrão";
@@ -1550,6 +1551,7 @@
 "5-hour usage" = "Uso de 5 horas";
 "7-day usage" = "Uso de 7 dias";
 "Total usage" = "Uso total";
+"claude_oauth_keychain_access_disabled" = "O acesso ao Keychain está desativado, então o CodexBar não pode ler os dados de login do Claude.";
 "claude_oauth_keychain_access_revoked" = "O acesso às Chaves do Claude foi revogado pela rotação do token do Claude Code. Clique em Atualizar para conceder o acesso novamente ou altere a fonte de uso do Claude para CLI/Web.";
 "claude_showing_last_known_usage" = "Exibindo o último uso conhecido, capturado %@.";
 "claude_limited_usage_detail" = "Detalhes de uso limitados";
