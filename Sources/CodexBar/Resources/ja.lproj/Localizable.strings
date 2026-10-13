@@ -2519,3 +2519,12 @@
 "Plan renewal / expiry" = "プランの更新 / 有効期限";
 
 "Hidden by the global optional credits, spending & billing setting." = "オプションのクレジット、支出、請求情報の全体設定により非表示になっています。";
+
+"Provider order updated" = "プロバイダーの順序を更新しました";
+"Undo" = "取り消す";
+"Clear filters" = "フィルターを解除";
+"Change provider order" = "プロバイダーの順序を変更";
+"Provider sorting" = "プロバイダーの並べ替え";
+"Only enabled providers" = "有効なプロバイダーのみ";
+"Restore default order" = "既定の順序に戻す";
+"Also restores the provider order in the menu bar. Can be undone." = "メニューバーのプロバイダー順序も戻します。取り消し可能です。";

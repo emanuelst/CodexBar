@@ -2522,3 +2522,12 @@
 "Plan renewal / expiry" = "Plan yenileme / sona erme";
 
 "Hidden by the global optional credits, spending & billing setting." = "İsteğe bağlı krediler, harcamalar ve faturalandırma için genel ayar tarafından gizlendi.";
+
+"Provider order updated" = "Sağlayıcı sırası güncellendi";
+"Undo" = "Geri al";
+"Clear filters" = "Filtreleri temizle";
+"Change provider order" = "Sağlayıcı sırasını değiştir";
+"Provider sorting" = "Sağlayıcı sıralaması";
+"Only enabled providers" = "Yalnızca etkin sağlayıcılar";
+"Restore default order" = "Varsayılan sırayı geri yükle";
+"Also restores the provider order in the menu bar. Can be undone." = "Menü çubuğundaki sağlayıcı sırasını da geri yükler. Geri alınabilir.";

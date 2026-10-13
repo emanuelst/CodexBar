@@ -2523,3 +2523,12 @@
 "Plan renewal / expiry" = "การต่ออายุ / วันหมดอายุแพ็กเกจ";
 
 "Hidden by the global optional credits, spending & billing setting." = "ซ่อนโดยการตั้งค่าส่วนกลางสำหรับเครดิตเสริม ค่าใช้จ่าย และข้อมูลการเรียกเก็บเงิน";
+
+"Provider order updated" = "อัปเดตลำดับผู้ให้บริการแล้ว";
+"Undo" = "เลิกทำ";
+"Clear filters" = "ล้างตัวกรอง";
+"Change provider order" = "เปลี่ยนลำดับผู้ให้บริการ";
+"Provider sorting" = "การเรียงผู้ให้บริการ";
+"Only enabled providers" = "เฉพาะผู้ให้บริการที่เปิดใช้";
+"Restore default order" = "คืนค่าลำดับเริ่มต้น";
+"Also restores the provider order in the menu bar. Can be undone." = "คืนค่าลำดับผู้ให้บริการในแถบเมนูด้วย สามารถเลิกทำได้";

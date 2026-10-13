@@ -2520,3 +2520,12 @@
 "Plan renewal / expiry" = "Продление / окончание плана";
 
 "Hidden by the global optional credits, spending & billing setting." = "Скрыто глобальной настройкой дополнительных кредитов, расходов и оплаты.";
+
+"Provider order updated" = "Порядок провайдеров обновлён";
+"Undo" = "Отменить";
+"Clear filters" = "Сбросить фильтры";
+"Change provider order" = "Изменить порядок провайдеров";
+"Provider sorting" = "Сортировка провайдеров";
+"Only enabled providers" = "Только активные провайдеры";
+"Restore default order" = "Восстановить исходный порядок";
+"Also restores the provider order in the menu bar. Can be undone." = "Также восстанавливает порядок провайдеров в строке меню. Действие можно отменить.";

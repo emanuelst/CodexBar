@@ -2518,3 +2518,12 @@
 "Plan renewal / expiry" = "Renouvellement / expiration du forfait";
 
 "Hidden by the global optional credits, spending & billing setting." = "Masqué par le réglage global des crédits facultatifs, dépenses et informations de facturation.";
+
+"Provider order updated" = "Ordre des fournisseurs mis à jour";
+"Undo" = "Annuler";
+"Clear filters" = "Effacer les filtres";
+"Change provider order" = "Modifier l’ordre des fournisseurs";
+"Provider sorting" = "Tri des fournisseurs";
+"Only enabled providers" = "Fournisseurs activés uniquement";
+"Restore default order" = "Rétablir l’ordre par défaut";
+"Also restores the provider order in the menu bar. Can be undone." = "Rétablit aussi l’ordre des fournisseurs dans la barre des menus. Cette action peut être annulée.";

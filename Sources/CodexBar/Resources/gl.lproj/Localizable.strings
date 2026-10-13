@@ -2518,3 +2518,12 @@
 "Plan renewal / expiry" = "Renovación / caducidade do plan";
 
 "Hidden by the global optional credits, spending & billing setting." = "Agochado pola configuración global de créditos opcionais, gastos e facturación.";
+
+"Provider order updated" = "Orde dos provedores actualizada";
+"Undo" = "Desfacer";
+"Clear filters" = "Borrar filtros";
+"Change provider order" = "Cambiar a orde dos provedores";
+"Provider sorting" = "Ordenación dos provedores";
+"Only enabled providers" = "Só provedores activos";
+"Restore default order" = "Restaurar a orde predeterminada";
+"Also restores the provider order in the menu bar. Can be undone." = "Tamén restaura a orde dos provedores na barra de menús. Pódese desfacer.";

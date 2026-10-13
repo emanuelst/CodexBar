@@ -2522,3 +2522,12 @@
 "Plan renewal / expiry" = "Odnowienie / wygaśnięcie planu";
 
 "Hidden by the global optional credits, spending & billing setting." = "Ukryte przez globalne ustawienie opcjonalnych kredytów, wydatków i rozliczeń.";
+
+"Provider order updated" = "Zaktualizowano kolejność dostawców";
+"Undo" = "Cofnij";
+"Clear filters" = "Wyczyść filtry";
+"Change provider order" = "Zmień kolejność dostawców";
+"Provider sorting" = "Sortowanie dostawców";
+"Only enabled providers" = "Tylko aktywni dostawcy";
+"Restore default order" = "Przywróć domyślną kolejność";
+"Also restores the provider order in the menu bar. Can be undone." = "Przywraca również kolejność dostawców na pasku menu. Można cofnąć.";

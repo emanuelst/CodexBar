@@ -2520,3 +2520,12 @@
 "Plan renewal / expiry" = "Gia hạn / hết hạn gói";
 
 "Hidden by the global optional credits, spending & billing setting." = "Bị ẩn bởi cài đặt chung cho tín dụng tùy chọn, chi tiêu và thanh toán.";
+
+"Provider order updated" = "Đã cập nhật thứ tự nhà cung cấp";
+"Undo" = "Hoàn tác";
+"Clear filters" = "Xóa bộ lọc";
+"Change provider order" = "Đổi thứ tự nhà cung cấp";
+"Provider sorting" = "Sắp xếp nhà cung cấp";
+"Only enabled providers" = "Chỉ nhà cung cấp đã bật";
+"Restore default order" = "Khôi phục thứ tự mặc định";
+"Also restores the provider order in the menu bar. Can be undone." = "Cũng khôi phục thứ tự nhà cung cấp trên thanh menu. Có thể hoàn tác.";

@@ -2523,3 +2523,12 @@
 "Plan renewal / expiry" = "Rinnovo / scadenza del piano";
 
 "Hidden by the global optional credits, spending & billing setting." = "Nascosto dall’impostazione globale per crediti opzionali, spese e fatturazione.";
+
+"Provider order updated" = "Ordine dei fornitori aggiornato";
+"Undo" = "Annulla";
+"Clear filters" = "Cancella filtri";
+"Change provider order" = "Modifica l’ordine dei fornitori";
+"Provider sorting" = "Ordinamento dei fornitori";
+"Only enabled providers" = "Solo fornitori attivi";
+"Restore default order" = "Ripristina l’ordine predefinito";
+"Also restores the provider order in the menu bar. Can be undone." = "Ripristina anche l’ordine dei fornitori nella barra dei menu. L’azione può essere annullata.";

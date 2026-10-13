@@ -2518,3 +2518,12 @@
 "Plan renewal / expiry" = "Planförnyelse / utgångsdatum";
 
 "Hidden by the global optional credits, spending & billing setting." = "Dolt av den globala inställningen för valfria krediter, utgifter och faktureringsuppgifter.";
+
+"Provider order updated" = "Leverantörsordningen uppdaterad";
+"Undo" = "Ångra";
+"Clear filters" = "Rensa filter";
+"Change provider order" = "Ändra leverantörsordning";
+"Provider sorting" = "Sortera leverantörer";
+"Only enabled providers" = "Endast aktiverade leverantörer";
+"Restore default order" = "Återställ standardordning";
+"Also restores the provider order in the menu bar. Can be undone." = "Återställer även leverantörsordningen i menyraden. Kan ångras.";
