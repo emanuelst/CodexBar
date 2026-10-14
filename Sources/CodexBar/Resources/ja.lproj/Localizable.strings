@@ -649,8 +649,8 @@
 "show_provider_changelog_links_title" = "プロバイダの変更履歴リンクを表示";
 "highlight_menu_cards_on_hover_title" = "ホバー時にメニューカードをハイライト";
 "show_provider_changelog_links_subtitle" = "対応する CLI ベースのプロバイダのリリースノートへのリンクをメニューに追加します。";
-"show_credits_extra_usage_title" = "クレジットと追加使用量を表示";
-"show_credits_extra_usage_subtitle" = "対応プロバイダーのクレジットと追加使用量を表示します。";
+"show_credits_extra_usage_title" = "オプションのクレジット、支出、請求詳細を表示";
+"show_credits_extra_usage_subtitle" = "すべてのプロバイダーに適用されます。個別の表示設定も引き続き有効です。Codex と Claude のリミットリセットクレジットとプラン日は個別に制御されます。";
 "multi_account_layout_title" = "複数アカウントのレイアウト";
 "multi_account_layout_subtitle" = "セグメント式のアカウント切替か、積み重ね式のアカウントカードを選択します。";
 "multi_account_layout_segmented" = "セグメント";
@@ -2620,4 +2620,5 @@
 "Daily spend · %@" = "日別の支出 · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "選択中のトークンアカウント「%@」に適用されます。各アカウントは独自の上限を保持します。";
 "Applies to the OpenAI API key, not to token accounts." = "OpenAI APIキーに適用されます。トークンアカウントには適用されません。";
+
 "config_load_failed_title" = "設定ファイルを読み込めませんでした";

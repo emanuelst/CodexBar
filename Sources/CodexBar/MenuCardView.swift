@@ -49,6 +49,8 @@ struct UsageMenuCardView: View {
             let workdayTickAppearance: WorkdayTickAppearance
             let cardStyle: Bool
             var sessionEquivalentDetail: UsagePaceText.SessionEquivalentDetail?
+            /// True for the Codex monthly lane synthesized from a credit limit (no rate window).
+            let isSyntheticCreditLane: Bool
             var helpText: String?
 
             init(
@@ -68,7 +70,9 @@ struct UsageMenuCardView: View {
                 workdayMarkerPercents: [Double] = [],
                 workdayTickAppearance: WorkdayTickAppearance = .subtle,
                 cardStyle: Bool = false,
-                sessionEquivalentDetail: UsagePaceText.SessionEquivalentDetail? = nil)
+                sessionEquivalentDetail: UsagePaceText.SessionEquivalentDetail? = nil,
+                isSyntheticCreditLane: Bool = false,
+                helpText: String? = nil)
             {
                 self.id = id
                 self.title = title
@@ -87,6 +91,8 @@ struct UsageMenuCardView: View {
                 self.workdayTickAppearance = workdayTickAppearance
                 self.cardStyle = cardStyle
                 self.sessionEquivalentDetail = sessionEquivalentDetail
+                self.isSyntheticCreditLane = isSyntheticCreditLane
+                self.helpText = helpText
             }
 
             var percentLabel: String {
@@ -195,6 +201,8 @@ struct UsageMenuCardView: View {
         let tokenUsage: TokenUsageSection?
         let placeholder: String?
         let progressColor: Color
+        /// Claude only: the prepaid Extra usage row stays configurable while the global switch is off.
+        var claudePrepaidExtraUsageAvailable: Bool = false
     }
 
     let model: Model
@@ -994,7 +1002,8 @@ extension UsageMenuCardView.Model {
             providerCost: providerCost,
             tokenUsage: tokenUsage,
             placeholder: placeholder,
-            progressColor: Self.progressColor(for: input.provider))
+            progressColor: Self.progressColor(for: input.provider),
+            claudePrepaidExtraUsageAvailable: input.claudePrepaidExtraUsageAvailable)
     }
 
     private static func resolvedProviderCost(input: Input) -> ProviderCostSnapshot? {

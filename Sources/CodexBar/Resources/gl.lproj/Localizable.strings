@@ -626,8 +626,8 @@
 "show_provider_changelog_links_title" = "Amosar as ligazóns ao rexistro de cambios do provedor";
 "highlight_menu_cards_on_hover_title" = "Resaltar as tarxetas do menú ao pasar o cursor";
 "show_provider_changelog_links_subtitle" = "Engade ao menú enlaces ás notas de versión dos provedores compatibles baseados en CLI.";
-"show_credits_extra_usage_title" = "Amosar créditos + uso adicional";
-"show_credits_extra_usage_subtitle" = "Amosa créditos e uso adicional para os provedores compatibles.";
+"show_credits_extra_usage_title" = "Amosar créditos opcionais, gastos e detalles de facturación";
+"show_credits_extra_usage_subtitle" = "Aplicase a todos os provedores. Os axustes de visibilidade individuais seguen aplicándose. Os créditos de reinicio de límites e as datas do plan de Codex e Claude contrólanse por separado.";
 "multi_account_layout_title" = "Disposición multiconta";
 "multi_account_layout_subtitle" = "Escolle o cambio de conta segmentado ou tarxetas de conta apiladas.";
 "multi_account_layout_segmented" = "Segmentado";
@@ -2619,4 +2619,5 @@
 "Daily spend · %@" = "Gasto diario · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Aplícase á conta de token seleccionada «%@». Cada conta conserva os seus propios límites.";
 "Applies to the OpenAI API key, not to token accounts." = "Aplícase á clave da API de OpenAI, non ás contas de token.";
+
 "config_load_failed_title" = "Non se puido ler o ficheiro de configuración";

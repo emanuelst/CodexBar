@@ -652,8 +652,8 @@
 "show_provider_changelog_links_title" = "Показати посилання журналу змін провайдера";
 "highlight_menu_cards_on_hover_title" = "Підсвічувати картки меню при наведенні";
 "show_provider_changelog_links_subtitle" = "Додає в меню посилання на примітки до випуску для підтримуваних постачальників, що підтримують CLI.";
-"show_credits_extra_usage_title" = "Показати кредити + додаткове використання";
-"show_credits_extra_usage_subtitle" = "Показувати кредити та додаткове використання для підтримуваних постачальників.";
+"show_credits_extra_usage_title" = "Показати додаткові кредити, витрати та деталі оплати";
+"show_credits_extra_usage_subtitle" = "Діє для всіх постачальників. Індивідуальні налаштування видимості все ще застосовуються. Кредити скидання лімітів та дати планів Codex і Claude керуються окремо.";
 "multi_account_layout_title" = "Макет кількох облікових записів";
 "multi_account_layout_subtitle" = "Виберіть сегментоване перемикання облікових записів або складені картки облікових записів.";
 "multi_account_layout_segmented" = "Сегментований";
@@ -2620,4 +2620,5 @@
 "Daily spend · %@" = "Щоденні витрати · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Застосовується до вибраного облікового запису токена «%@». Кожен обліковий запис зберігає власні ліміти.";
 "Applies to the OpenAI API key, not to token accounts." = "Застосовується до ключа API OpenAI, а не до облікових записів токенів.";
+
 "config_load_failed_title" = "Не вдалося прочитати файл налаштувань";

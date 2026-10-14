@@ -660,8 +660,8 @@
 "show_provider_changelog_links_title" = "Tampilkan tautan changelog penyedia";
 "highlight_menu_cards_on_hover_title" = "Sorot kartu menu saat kursor diarahkan";
 "show_provider_changelog_links_subtitle" = "Menambahkan tautan catatan rilis untuk penyedia berbasis CLI yang didukung ke menu.";
-"show_credits_extra_usage_title" = "Tampilkan kredit + penggunaan ekstra";
-"show_credits_extra_usage_subtitle" = "Tampilkan kredit dan penggunaan tambahan untuk penyedia yang didukung.";
+"show_credits_extra_usage_title" = "Tampilkan kredit opsional, pengeluaran & detail penagihan";
+"show_credits_extra_usage_subtitle" = "Berlaku untuk semua penyedia. Pengaturan visibilitas individual tetap berlaku. Kredit reset batas dan tanggal langganan Codex serta Claude diatur secara terpisah.";
 "multi_account_layout_title" = "Tata letak multi-akun";
 "multi_account_layout_subtitle" = "Pilih pengalihan akun tersegmentasi atau kartu akun bertumpuk.";
 "multi_account_layout_segmented" = "Tersegmentasi";
@@ -2621,4 +2621,5 @@
 "Daily spend · %@" = "Pengeluaran harian · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Berlaku untuk akun token yang dipilih “%@”. Setiap akun menyimpan batasnya sendiri.";
 "Applies to the OpenAI API key, not to token accounts." = "Berlaku untuk kunci API OpenAI, bukan untuk akun token.";
+
 "config_load_failed_title" = "File pengaturan tidak dapat dibaca";

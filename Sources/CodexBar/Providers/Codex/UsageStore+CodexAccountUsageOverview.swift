@@ -28,16 +28,25 @@ extension UsageStore {
             let error = PersonalInfoRedactor.redactEmails(
                 in: followedError ?? CodexUIErrorMapper.userFacingMessage(record?.error),
                 isEnabled: self.settings.hidePersonalInfo)
-            var model = UsageMenuCardView.Model.make(self.menuCardInput(for: .codex, context: .settingsAccount(.init(
+            let accountContext = UsageMenuCardContext.Account(
                 snapshot: record?.snapshot,
                 error: error,
                 info: AccountInfo(email: account.email, plan: nil),
                 privacyOrdinal: ordinals[account.id].flatMap { PersonalInfoRedactor.AccountOrdinal($0) },
                 sourceLabel: sourceLabel,
-                credits: record?.credits))))
+                credits: record?.credits)
+            var model = UsageMenuCardView.Model.make(self.menuCardInput(
+                for: .codex,
+                context: .settingsAccount(accountContext)))
+            let catalogueModel = UsageMenuCardView.Model.make(self.menuCardInput(
+                for: .codex,
+                context: .settingsAccount(accountContext),
+                optionalUsageOverride: true))
             if ownsLiveUsage {
                 // Keep authorized dashboard extras on their owner; sibling cards never read live adjuncts.
-                let liveModel = UsageMenuCardView.Model.make(self.menuCardInput(for: .codex, context: .settings))
+                let liveModel = UsageMenuCardView.Model.make(self.menuCardInput(
+                    for: .codex,
+                    context: .settings))
                 model.metrics += liveModel.metrics.filter { $0.id == "code-review" }
             }
             return ProviderAccountUsageOverview.Row(
@@ -46,7 +55,7 @@ extension UsageStore {
                 isFollowed: isFollowed,
                 isSystem: account.id == projection.liveVisibleAccountID,
                 model: model.applyingUsageItemVisibility(hiddenItemIDs: self.settings.hiddenUsageItemIDs(for: .codex)),
-                usageItems: model.usageItemDescriptors,
+                usageItems: catalogueModel.usageItemDescriptors,
                 updatedAt: record?.snapshot?.updatedAt,
                 sourceLabel: sourceLabel,
                 error: error,

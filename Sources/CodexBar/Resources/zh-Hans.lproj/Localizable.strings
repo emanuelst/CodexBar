@@ -622,8 +622,8 @@
 "show_provider_changelog_links_title" = "显示提供商变更日志链接";
 "highlight_menu_cards_on_hover_title" = "鼠标悬停时高亮菜单卡片";
 "show_provider_changelog_links_subtitle" = "在菜单中为支持的 CLI 提供商添加发布说明链接。";
-"show_credits_extra_usage_title" = "显示额度 + 额外用量";
-"show_credits_extra_usage_subtitle" = "显示受支持提供商的额度和额外用量。";
+"show_credits_extra_usage_title" = "显示可选额度、支出和账单详情";
+"show_credits_extra_usage_subtitle" = "适用于所有提供商。单独的可见性设置仍然有效。Codex 和 Claude 的限额重置额度和计划日期单独控制。";
 "multi_account_layout_title" = "多账户布局";
 "multi_account_layout_subtitle" = "选择分段账户切换或堆叠账户卡片。";
 "multi_account_layout_segmented" = "分段";
@@ -2612,4 +2612,5 @@
 "Daily spend · %@" = "每日支出 · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "适用于所选令牌账户“%@”。每个账户保留各自的限制。";
 "Applies to the OpenAI API key, not to token accounts." = "适用于 OpenAI API 密钥，不适用于令牌账户。";
+
 "config_load_failed_title" = "无法读取设置文件";

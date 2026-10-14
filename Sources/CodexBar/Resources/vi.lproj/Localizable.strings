@@ -648,8 +648,8 @@
 "show_provider_changelog_links_title" = "Hiển thị Nhà cung cấp liên kết nhật ký thay đổi";
 "highlight_menu_cards_on_hover_title" = "Tô sáng thẻ menu khi rê chuột qua";
 "show_provider_changelog_links_subtitle" = "Thêm liên kết ghi chú phát hành cho các nhà cung cấp được hỗ trợ CLI vào menu.";
-"show_credits_extra_usage_title" = "Hiển thị tín dụng + phần Mức sử dụng";
-"show_credits_extra_usage_subtitle" = "Hiển thị tín dụng và mức sử dụng bổ sung cho các nhà cung cấp được hỗ trợ.";
+"show_credits_extra_usage_title" = "Hiển thị tín dụng tùy chọn, chi tiêu và chi tiết thanh toán";
+"show_credits_extra_usage_subtitle" = "Áp dụng cho tất cả nhà cung cấp. Cài đặt hiển thị riêng lẻ vẫn được áp dụng. Tín dụng đặt lại giới hạn và ngày kế hoạch của Codex và Claude được quản lý riêng.";
 "multi_account_layout_title" = "Bố cục nhiều tài khoản";
 "multi_account_layout_subtitle" = "Chọn thẻ tài khoản chuyển đổi phân đoạn hoặc thẻ tài khoản xếp chồng.";
 "multi_account_layout_segmented" = "Được phân đoạn";
@@ -2621,4 +2621,5 @@
 "Daily spend · %@" = "Chi tiêu hằng ngày · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Áp dụng cho tài khoản token đã chọn “%@”. Mỗi tài khoản giữ giới hạn riêng.";
 "Applies to the OpenAI API key, not to token accounts." = "Áp dụng cho khóa API OpenAI, không áp dụng cho các tài khoản token.";
+
 "config_load_failed_title" = "Không thể đọc tệp cài đặt";

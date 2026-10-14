@@ -651,8 +651,8 @@
 "show_provider_changelog_links_title" = "Visa länkar till leverantörers ändringsloggar";
 "highlight_menu_cards_on_hover_title" = "Markera menykort vid hovring";
 "show_provider_changelog_links_subtitle" = "Lägger till länkar till utgåvekommentarer för stödda CLI-baserade leverantörer i menyn.";
-"show_credits_extra_usage_title" = "Visa krediter och extra användning";
-"show_credits_extra_usage_subtitle" = "Visa krediter och extra användning för leverantörer som stöds.";
+"show_credits_extra_usage_title" = "Visa valfria krediter, utgifter och faktureringsdetaljer";
+"show_credits_extra_usage_subtitle" = "Gäller för alla leverantörer. Individuella visningsinställningar gäller fortfarande. Återställningskrediter för gränser och plandatum för Codex och Claude hanteras separat.";
 "multi_account_layout_title" = "Layout för flera konton";
 "multi_account_layout_subtitle" = "Välj segmenterad kontoväxling eller staplade kontokort.";
 "multi_account_layout_segmented" = "Segmenterad";
@@ -2619,4 +2619,5 @@
 "Daily spend · %@" = "Dagliga utgifter · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Gäller det valda tokenkontot ”%@”. Varje konto behåller sina egna gränser.";
 "Applies to the OpenAI API key, not to token accounts." = "Gäller OpenAI API-nyckeln, inte tokenkonton.";
+
 "config_load_failed_title" = "Inställningsfilen kunde inte läsas";

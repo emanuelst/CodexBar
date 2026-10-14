@@ -658,8 +658,8 @@
 "show_provider_changelog_links_title" = "แสดงลิงก์บันทึกการเปลี่ยนแปลงของผู้ให้บริการ";
 "highlight_menu_cards_on_hover_title" = "ไฮไลต์การ์ดเมนูเมื่อวางเมาส์เหนือ";
 "show_provider_changelog_links_subtitle" = "เพิ่มลิงก์บันทึกประจํารุ่นสําหรับผู้ให้บริการที่ได้รับการสนับสนุน CLI ในเมนู";
-"show_credits_extra_usage_title" = "แสดงเครดิต + การใช้งานเพิ่มเติม";
-"show_credits_extra_usage_subtitle" = "แสดงเครดิตและการใช้งานเพิ่มเติมสำหรับผู้ให้บริการที่รองรับ";
+"show_credits_extra_usage_title" = "แสดงเครดิต การใช้จ่าย และรายละเอียดการเรียกเก็บเงินเพิ่มเติม";
+"show_credits_extra_usage_subtitle" = "มีผลกับผู้ให้บริการทั้งหมด และยังใช้การตั้งค่าการแสดงผลแต่ละรายการได้ เครดิตรีเซ็ตขีดจำกัดและวันที่ของแผนใน Codex และ Claude ควบคุมแยกกัน";
 "multi_account_layout_title" = "รูปแบบหลายบัญชี";
 "multi_account_layout_subtitle" = "เลือกการสลับบัญชีแบบแบ่งกลุ่มหรือบัตรบัญชีแบบเรียงซ้อน";
 "multi_account_layout_segmented" = "แบ่งกลุ่ม";
@@ -2622,4 +2622,5 @@
 "Daily spend · %@" = "ค่าใช้จ่ายรายวัน · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "ใช้กับบัญชีโทเคนที่เลือก “%@” แต่ละบัญชีจะเก็บขีดจำกัดของตนเองไว้";
 "Applies to the OpenAI API key, not to token accounts." = "ใช้กับคีย์ API ของ OpenAI ไม่ใช่บัญชีโทเคน";
+
 "config_load_failed_title" = "ไม่สามารถอ่านไฟล์การตั้งค่าได้";

@@ -21,7 +21,7 @@ struct ProviderAccountUsageOverview {
     let onRefresh: (Set<String>) -> Void
 
     var usageItems: [ProviderUsageItemDescriptor] {
-        self.rows.flatMap(\.usageItems)
+        ProviderUsageItemDescriptor.merging(self.rows.flatMap(\.usageItems))
     }
 }
 

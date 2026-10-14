@@ -40,6 +40,8 @@ extension UsageMenuCardView.Model {
         let sourceLabel: String?
         let subtitleOverride: String?
         let kiloAutoMode: Bool
+        /// True when the Claude account's prepaid Extra usage fetch is available (web-enriched).
+        let claudePrepaidExtraUsageAvailable: Bool
         let hidePersonalInfo: Bool
         let weeklyPace: UsagePace?
         let sessionEquivalentForecast: SessionEquivalentForecast?
@@ -89,6 +91,7 @@ extension UsageMenuCardView.Model {
             sourceLabel: String? = nil,
             subtitleOverride: String? = nil,
             kiloAutoMode: Bool = false,
+            claudePrepaidExtraUsageAvailable: Bool = false,
             hidePersonalInfo: Bool,
             weeklyPace: UsagePace? = nil,
             sessionEquivalentForecast: SessionEquivalentForecast? = nil,
@@ -137,6 +140,7 @@ extension UsageMenuCardView.Model {
             self.sourceLabel = sourceLabel
             self.subtitleOverride = subtitleOverride
             self.kiloAutoMode = kiloAutoMode
+            self.claudePrepaidExtraUsageAvailable = claudePrepaidExtraUsageAvailable
             self.hidePersonalInfo = hidePersonalInfo
             self.weeklyPace = weeklyPace
             self.sessionEquivalentForecast = sessionEquivalentForecast

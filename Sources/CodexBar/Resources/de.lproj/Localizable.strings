@@ -652,8 +652,8 @@
 "show_provider_changelog_links_title" = "Links zum Änderungsprotokoll des Anbieters anzeigen";
 "highlight_menu_cards_on_hover_title" = "Menükarten beim Darüberfahren hervorheben";
 "show_provider_changelog_links_subtitle" = "Fügt dem Menü Versionshinweise-Links für unterstützte CLI-gestützte Anbieter hinzu.";
-"show_credits_extra_usage_title" = "Credits + zusätzliche Nutzung anzeigen";
-"show_credits_extra_usage_subtitle" = "Zeigt Guthaben und zusätzliche Nutzung für unterstützte Anbieter.";
+"show_credits_extra_usage_title" = "Optionale Guthaben, Ausgaben und Abrechnungsdetails anzeigen";
+"show_credits_extra_usage_subtitle" = "Gilt für alle Anbieter. Individuelle Anzeige-Einstellungen gelten weiterhin. Die Limit-Reset-Guthaben und Plan-Daten von Codex und Claude werden separat gesteuert.";
 "multi_account_layout_title" = "Layout für mehrere Konten";
 "multi_account_layout_subtitle" = "Wählen Sie segmentierte Kontoumschaltung oder gestapelte Kontokarten.";
 "multi_account_layout_segmented" = "Segmentiert";
@@ -2618,4 +2618,5 @@
 "Daily spend · %@" = "Tägliche Ausgaben · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Gilt für das ausgewählte Token-Konto „%@“. Jedes Konto behält seine eigenen Limits.";
 "Applies to the OpenAI API key, not to token accounts." = "Gilt für den OpenAI-API-Schlüssel, nicht für Token-Konten.";
+
 "config_load_failed_title" = "Einstellungsdatei konnte nicht gelesen werden";

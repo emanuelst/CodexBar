@@ -660,8 +660,8 @@
 "show_provider_changelog_links_title" = "Mostra link changelog provider";
 "highlight_menu_cards_on_hover_title" = "Evidenzia le schede del menu al passaggio del cursore";
 "show_provider_changelog_links_subtitle" = "Aggiunge link alle note di rilascio per i provider CLI supportati.";
-"show_credits_extra_usage_title" = "Mostra crediti + uso extra";
-"show_credits_extra_usage_subtitle" = "Mostra crediti e utilizzo extra per i provider supportati.";
+"show_credits_extra_usage_title" = "Mostra crediti opzionali, spese e dettagli di fatturazione";
+"show_credits_extra_usage_subtitle" = "Si applica a tutti i provider. Le impostazioni di visibilità individuali restano valide. I crediti di reset dei limiti e le date del piano di Codex e Claude sono controllati separatamente.";
 "multi_account_layout_title" = "Layout multi-account";
 "multi_account_layout_subtitle" = "Scegli tra selezione segmentata o schede account impilate.";
 "multi_account_layout_segmented" = "Segmentato";
@@ -2624,4 +2624,5 @@
 "Daily spend · %@" = "Spesa giornaliera · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Si applica all’account token selezionato «%@». Ogni account mantiene i propri limiti.";
 "Applies to the OpenAI API key, not to token accounts." = "Si applica alla chiave API OpenAI, non agli account token.";
+
 "config_load_failed_title" = "Impossibile leggere il file delle impostazioni";

@@ -14,6 +14,40 @@ private actor OverviewFetchRecorder {
 @MainActor
 extension CodexAccountScopedRefreshTests {
     @Test
+    func `optional catalogue rows do not leak into managed account previews`() async throws {
+        try await self.withSelectedAccountRetentionFixture(sameEmail: true) { store, _, _ in
+            store.settings.showOptionalCreditsAndExtraUsage = false
+            let now = Date()
+            store.codexAccountSnapshots = store.codexAccountSnapshots.map { record in
+                let credits = CreditsSnapshot(
+                    remaining: 73,
+                    events: [],
+                    updatedAt: now,
+                    codexCreditLimit: CodexCreditLimitSnapshot(
+                        used: 27, limit: 100, remainingPercent: 73, resetsAt: nil, updatedAt: now))
+                let snapshot = UsageSnapshot(
+                    primary: nil,
+                    secondary: nil,
+                    updatedAt: now,
+                    identity: record.snapshot?.identity)
+                return CodexAccountUsageSnapshot(
+                    account: record.account,
+                    snapshot: snapshot,
+                    error: nil,
+                    sourceLabel: record.sourceLabel,
+                    credits: credits)
+            }
+
+            let overview = try #require(store.codexAccountUsageOverview(onRefresh: { _ in }))
+
+            #expect(overview.rows.allSatisfy { !$0.model.metrics.contains { $0.id == "monthly" } })
+            #expect(overview.usageItems.contains {
+                $0.id == .metric("monthly") && $0.requiresOptionalUsage
+            })
+        }
+    }
+
+    @Test
     func `overview retains every inventory row and never borrows selected account data`() async throws {
         try await self.withSelectedAccountRetentionFixture(sameEmail: true, count: 8) { store, _, accounts in
             store.codexAccountSnapshots.removeAll { $0.id == accounts[7].id }

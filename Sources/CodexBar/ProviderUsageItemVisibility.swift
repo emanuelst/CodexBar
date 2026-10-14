@@ -36,19 +36,44 @@ struct ProviderUsageItemDescriptor: Identifiable, Equatable, Sendable {
     let id: ProviderUsageItemID
     let title: String
     var requiresOptionalUsage: Bool = false
+    var hasMixedOptionalUsage: Bool = false
+
+    /// One saved visibility ID can cover both an ordinary quota and an optional credit lane.
+    /// Aggregate that meaning without letting account order choose the global-setting warning.
+    static func merging(_ descriptors: [Self]) -> [Self] {
+        let groups = Dictionary(grouping: descriptors, by: \.id)
+        var seen: Set<ProviderUsageItemID> = []
+        return descriptors.compactMap { item in
+            guard seen.insert(item.id).inserted, let group = groups[item.id] else { return nil }
+            let mixed = group.contains(where: \.hasMixedOptionalUsage)
+                || (group.contains(where: \.requiresOptionalUsage)
+                    && group.contains { !$0.requiresOptionalUsage })
+            let existingMixedTitles = group.filter(\.hasMixedOptionalUsage).map(\.title)
+            let title = existingMixedTitles.min()
+                ?? (mixed ? group.filter { !$0.requiresOptionalUsage }.map(\.title).min() ?? item.title : item.title)
+            return Self(
+                id: item.id,
+                title: title,
+                requiresOptionalUsage: group.allSatisfy(\.requiresOptionalUsage),
+                hasMixedOptionalUsage: mixed)
+        }
+    }
 }
 
 extension ProviderUsageItemID {
     @MainActor
     func requiresOptionalUsage(for provider: UsageProvider) -> Bool {
-        // Provider-specific by design: Codex extra/monthly and Claude Extra usage/Routines follow global gates.
+        // Provider-specific by design: Codex extra limits and Claude Extra usage/Routines follow global gates.
         if self == .credits || (provider == .claude && self == .claudeExtraUsage) {
             return true
         }
         if let metricID = self.metricID {
             // CodexAdditionalRateLimitMapper assigns the codex- prefix to optional extra limits.
-            return (provider == .codex && (metricID.hasPrefix("codex-") || metricID == "monthly")) ||
-                (provider == .claude && metricID == "claude-routines")
+            // A Codex "monthly" metric can be a real 30-day quota (always visible) or the synthetic
+            // credit-limit lane (globally gated); usageItemDescriptors resolves that from the window.
+            // The ID-level rule stays conservative for hidden placeholders, which lack window data.
+            return (provider == .codex && (metricID.hasPrefix("codex-") || metricID == "monthly"))
+                || (provider == .claude && metricID == "claude-routines")
         }
         guard let rawTitle = self.detailSectionTitle else { return false }
         let policy = ProviderDescriptorRegistry.descriptor(for: provider).presentation.optionalDetails
@@ -99,10 +124,16 @@ extension UsageMenuCardView.Model {
     @MainActor
     var usageItemDescriptors: [ProviderUsageItemDescriptor] {
         var descriptors = self.metrics.map { metric in
-            ProviderUsageItemDescriptor(
-                id: .metric(metric.id),
+            let itemID = ProviderUsageItemID.metric(metric.id)
+            // Provider-specific by design: the synthetic Codex credit lane is globally gated, while a
+            // real 30-day quota window keeps showing while the global switch is off.
+            let requiresOptionalUsage = self.provider == .codex && metric.id == "monthly"
+                ? metric.isSyntheticCreditLane
+                : itemID.requiresOptionalUsage(for: self.provider)
+            return ProviderUsageItemDescriptor(
+                id: itemID,
                 title: UsageMenuCardView.popupMetricTitle(provider: self.provider, metric: metric),
-                requiresOptionalUsage: ProviderUsageItemID.metric(metric.id).requiresOptionalUsage(for: self.provider))
+                requiresOptionalUsage: requiresOptionalUsage)
         }
         if !self.quotaSubscriptionNotes.isEmpty {
             descriptors.append(.init(id: .subscription, title: L("Plan renewal / expiry")))
@@ -146,6 +177,14 @@ extension UsageMenuCardView.Model {
            cost.title == L("Extra usage") || cost.title == L("Credits")
         {
             descriptors.append(.init(id: .claudeExtraUsage, title: cost.title, requiresOptionalUsage: true))
+        }
+        // Provider-specific by design: Claude prepaid Extra usage keeps a default-visible settings row
+        // for web-enriched accounts while the global switch suppresses its balance fetch.
+        if self.provider == .claude,
+           self.claudePrepaidExtraUsageAvailable,
+           !descriptors.contains(where: { $0.id == .claudeExtraUsage })
+        {
+            descriptors.append(.init(id: .claudeExtraUsage, title: L("Extra usage"), requiresOptionalUsage: true))
         }
 
         var seen = Set<ProviderUsageItemID>()
