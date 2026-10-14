@@ -218,6 +218,7 @@ extension SettingsStore {
     }
 
     func openTokenAccountsFile() {
+        guard !self.configLoadFailed else { return }
         do {
             try Self.writeConfig(self.config, to: self.configStore, watcher: self.configFileWatcher)
         } catch {

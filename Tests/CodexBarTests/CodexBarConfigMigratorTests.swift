@@ -5,6 +5,61 @@ import Testing
 
 @Suite(.serialized)
 struct CodexBarConfigMigratorTests {
+    @Test
+    @MainActor
+    func `failed config load blocks edits until a repaired file reloads`() async throws {
+        let suite = "CodexBarConfigMigratorTests-failed-load-manual-repair-\(UUID().uuidString)"
+        let defaults = InMemoryUserDefaults()
+        let configStore = testConfigStore(suiteName: suite)
+        try FileManager.default.createDirectory(
+            at: configStore.fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let corrupt = Data("broken credentials and settings".utf8)
+        try corrupt.write(to: configStore.fileURL)
+        let secrets = CountingLegacySecretStore()
+        let settings = SettingsStore(
+            userDefaults: defaults,
+            configStore: configStore,
+            zaiTokenStore: secrets,
+            syntheticTokenStore: secrets,
+            codexCookieStore: secrets,
+            claudeCookieStore: secrets,
+            cursorCookieStore: secrets,
+            opencodeCookieStore: secrets,
+            factoryCookieStore: secrets,
+            minimaxCookieStore: secrets,
+            minimaxAPITokenStore: secrets,
+            kimiTokenStore: secrets,
+            augmentCookieStore: secrets,
+            ampCookieStore: secrets,
+            copilotTokenStore: secrets,
+            tokenAccountStore: CountingTokenAccountStore(),
+            performInitialProviderDetection: false)
+
+        #expect(settings.configLoadFailed)
+        #expect(!settings.openAIWebAccessEnabled)
+        #expect(defaults.object(forKey: "openAIWebAccessEnabled") == nil)
+        await settings.applyProviderDetection()
+        #expect(!settings.providerDetectionCompleted)
+        #expect(defaults.object(forKey: "providerDetectionCompleted") == nil)
+        settings.updateConfig(reason: "test", affectsBackgroundWork: false) { config in
+            config.setProviderConfig(ProviderConfig(id: .claude, enabled: true))
+        }
+        #expect(try Data(contentsOf: configStore.fileURL) == corrupt)
+
+        var repaired = testConfigWithAllProvidersDisabled()
+        repaired.setProviderConfig(ProviderConfig(id: .codex, enabled: false, cookieSource: .off))
+        repaired.setProviderConfig(ProviderConfig(id: .claude, enabled: false, apiKey: "synthetic-repaired-key"))
+        try configStore.save(repaired)
+        settings.reloadConfig(reason: "manual-repair")
+
+        #expect(!settings.configLoadFailed)
+        #expect(defaults.object(forKey: "openAIWebAccessEnabled") as? Bool == false)
+        #expect(!settings.providerDetectionCompleted)
+        #expect(settings.configSnapshot.providerConfig(for: .claude)?.apiKey == "synthetic-repaired-key")
+        settings.updateProviderConfig(provider: .claude) { $0.enabled = true }
+        #expect(try configStore.load()?.providerConfig(for: .claude)?.enabled == true)
+    }
+
     @Test(arguments: [false, true])
     @MainActor
     func `settings applies stored keychain policy before legacy migration`(disabled: Bool) throws {
@@ -238,6 +293,54 @@ struct CodexBarConfigMigratorTests {
         #expect(unreadableSecrets.loadCount > firstUnreadableLoadCount)
         #expect(readableSecrets.clearAttempts > 0)
         #expect(unreadableSecrets.clearAttempts > 0)
+        #expect(defaults.bool(forKey: Self.legacyMigrationCompletedKey))
+    }
+
+    @Test
+    func `corrupt config load is never replaced or cleared during migration`() throws {
+        let suite = "CodexBarConfigMigratorTests-corrupt-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defaults.removePersistentDomain(forName: suite)
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("codexbar-tests", isDirectory: true)
+            .appendingPathComponent(suite, isDirectory: true)
+        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+        let configURL = base.appendingPathComponent("config.json")
+        let configStore = CodexBarConfigStore(fileURL: configURL)
+        var saved = CodexBarConfig.makeDefault()
+        saved.setProviderConfig(ProviderConfig(id: .moonshot, apiKey: "precious-token"))
+        try configStore.save(saved)
+
+        // Simulate a torn write (crash mid-save) and launch migration on top of it.
+        let corrupted = Data("{ not valid CodexBar config JSON".utf8)
+        try corrupted.write(to: configURL)
+
+        let secrets = CountingLegacySecretStore(token: "legacy-token")
+        let accountStore = CountingTokenAccountStore()
+        let stores = Self.legacyStores(secrets: secrets, accountStore: accountStore)
+
+        let migrated = CodexBarConfigMigrator.loadOrMigrate(
+            configStore: configStore,
+            userDefaults: defaults,
+            keychainAccessDisabled: false,
+            stores: stores)
+
+        // The unreadable config must stay on disk, repairable, with nothing cleared or flagged done.
+        #expect(try Data(contentsOf: configURL) == corrupted)
+        #expect(secrets.clearAttempts == 0)
+        #expect(try secrets.loadToken() == "legacy-token")
+        #expect(defaults.bool(forKey: Self.legacyMigrationCompletedKey) == false)
+        // Migration still returned a usable in-memory default instead of crashing or persisting it.
+        #expect(migrated.providerConfig(for: .moonshot)?.apiKey == nil)
+
+        try configStore.save(saved)
+        let recovered = Self.migrate(configStore: configStore, defaults: defaults, stores: stores)
+        #expect(recovered.providerConfig(for: .moonshot)?.apiKey == "precious-token")
+        #expect(secrets.clearAttempts > 0)
+        #expect(try secrets.loadToken() == nil)
         #expect(defaults.bool(forKey: Self.legacyMigrationCompletedKey))
     }
 

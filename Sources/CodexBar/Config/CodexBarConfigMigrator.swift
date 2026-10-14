@@ -32,10 +32,22 @@ struct CodexBarConfigMigrator {
         configStore: CodexBarConfigStore,
         userDefaults: UserDefaults,
         keychainAccessDisabled: Bool,
-        stores: LegacyStores) -> CodexBarConfig
+        stores: LegacyStores,
+        onConfigLoadFailure: () -> Void = {}) -> CodexBarConfig
     {
         let log = CodexBarLog.logger(LogCategories.configMigration)
-        let existing = try? configStore.load()
+        let existing: CodexBarConfig?
+        do {
+            existing = try configStore.load()
+        } catch {
+            // A broken on-disk config must stay repairable: persisting defaults or clearing
+            // legacy stores would destroy the user's only copy of credentials and settings.
+            log.error(
+                "Config load failed; skipping migration to keep the on-disk file repairable",
+                metadata: ["error": "\(error)"])
+            onConfigLoadFailure()
+            return CodexBarConfig.makeDefault().normalized()
+        }
         var config = (existing ?? CodexBarConfig.makeDefault()).normalized()
         var state = MigrationState()
 

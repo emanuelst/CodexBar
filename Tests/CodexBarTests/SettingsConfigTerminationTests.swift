@@ -1,11 +1,87 @@
 import AppKit
-import CodexBarCore
 import Foundation
 import Testing
 @testable import CodexBar
+@testable import CodexBarCore
 
 @MainActor
 struct SettingsConfigTerminationTests {
+    @Test(arguments: [false, true])
+    func `staged physical writer cannot replace corruption or a later repair`(_ repairImmediately: Bool) async throws {
+        try await self.withSettings { settings in
+            settings.configFileWatcher?.stop()
+            let snapshot = settings.configSnapshot
+            let store = settings.configStore
+            let permit = settings.configPersistenceCoordinator.makeWritePermit()
+            let started = AsyncStream<Void>.makeStream()
+            let release = DispatchSemaphore(value: 0)
+            defer { release.signal() }
+            let beforeWrite: @Sendable (URL) throws -> Void = { _ in
+                started.continuation.yield(())
+                release.wait()
+            }
+            let writer = Task.detached {
+                try CredentialFileWriter.$beforeWriteForTesting.withValue(beforeWrite) {
+                    try SettingsStore.writeConfig(snapshot, to: store, watcher: nil, permit: permit)
+                }
+            }
+            var iterator = started.stream.makeAsyncIterator()
+            _ = await iterator.next()
+            var expected = Data("synthetic-staged-write-corruption".utf8)
+            try expected.write(to: store.fileURL, options: .atomic)
+            settings.reloadConfig(reason: "staged-write-regression")
+            #expect(settings.configLoadFailed)
+            if repairImmediately {
+                var repair = snapshot
+                var entry = try #require(repair.providerConfig(for: .opencode))
+                entry.workspaceID = "manual-staged-write-repair"
+                repair.setProviderConfig(entry)
+                expected = try store.encodedData(for: repair)
+                try expected.write(to: store.fileURL, options: .atomic)
+                settings.reloadConfig(reason: "manual-staged-write-repair")
+                #expect(!settings.configLoadFailed)
+            }
+            release.signal()
+            let result = await writer.result
+            switch result {
+            case .success: Issue.record("Invalidated staged writer unexpectedly published")
+            case let .failure(error): #expect(error is CancellationError)
+            }
+            #expect(try Data(contentsOf: store.fileURL) == expected)
+        }
+    }
+
+    @Test(arguments: [false, true])
+    func `failed reload invalidates a physical writer even after repair`(_ repairImmediately: Bool) async throws {
+        let fileManager = PausingConfigFileManager()
+        try await self.withSettings(fileManager: fileManager) { settings in
+            settings.configFileWatcher?.stop()
+            fileManager.pauseNextWrite()
+            defer { fileManager.releaseWriter() }
+            settings.opencodeWorkspaceID = "stale-pending-edit"
+            try await self.waitUntil { fileManager.writerIsPaused }
+            let physicalWrite = try #require(settings.configPersistWriteTask)
+            let corrupt = Data("synthetic-runtime-corruption".utf8)
+            try corrupt.write(to: settings.configStore.fileURL)
+            settings.reloadConfig(reason: "physical-writer-regression")
+            #expect(settings.configLoadFailed)
+            var expected = corrupt
+            if repairImmediately {
+                var repair = settings.configSnapshot
+                var entry = try #require(repair.providerConfig(for: .opencode))
+                entry.workspaceID = "manually-repaired"
+                repair.setProviderConfig(entry)
+                expected = try settings.configStore.encodedData(for: repair)
+                try expected.write(to: settings.configStore.fileURL, options: .atomic)
+                settings.reloadConfig(reason: "manual-repair")
+                #expect(!settings.configLoadFailed)
+            }
+            fileManager.releaseWriter()
+            await physicalWrite.value
+            #expect(try Data(contentsOf: settings.configStore.fileURL) == expected)
+        }
+    }
+
     @Test
     func `quit preserves a provider toggle before its debounce expires`() async throws {
         try await self.withSettings { settings in

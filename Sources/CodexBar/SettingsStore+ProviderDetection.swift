@@ -38,7 +38,7 @@ enum ProviderDetectionPolicy {
 
 extension SettingsStore {
     func runInitialProviderDetectionIfNeeded(force: Bool = false) {
-        guard force || !self.providerDetectionCompleted else { return }
+        guard !self.configLoadFailed, force || !self.providerDetectionCompleted else { return }
         LoginShellPathCache.shared.captureOnce { [weak self] _ in
             Task { @MainActor in
                 await self?.applyProviderDetection()
@@ -47,7 +47,7 @@ extension SettingsStore {
     }
 
     func applyProviderDetection() async {
-        guard !self.providerDetectionCompleted else { return }
+        guard !self.configLoadFailed, !self.providerDetectionCompleted else { return }
         // Provider-specific by design: detection reads each provider's installed app, CLI, or credential artifact.
         let codexCLIInstalled = BinaryLocator.resolveCodexBinary() != nil
         let claudeCLIInstalled = BinaryLocator.resolveClaudeBinary() != nil
@@ -90,6 +90,8 @@ extension SettingsStore {
                 "antigravity": enabledProviders.contains(.antigravity) ? "1" : "0",
             ])
 
+        // The asynchronous probe can overlap a failed external reload. Leave detection pending.
+        guard !self.configLoadFailed else { return }
         self.updateProviderConfig(provider: .codex) { entry in
             entry.enabled = enabledProviders.contains(.codex)
         }

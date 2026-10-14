@@ -75,6 +75,15 @@ public struct CodexBarConfigStore: @unchecked Sendable {
         }
     }
 
+    /// App writers can revalidate a snapshot after staging, while still holding the file lock.
+    package func saveEncodedData(_ data: Data, beforePublish: @escaping () throws -> Void) throws {
+        try self.withWriteLock {
+            try CredentialFileWriter.writePrivate(data, to: self.fileURL) { _ in
+                try beforePublish()
+            }
+        }
+    }
+
     /// Best-effort refreshes must compare and publish under the same lock as ordinary config writes.
     /// Skip contention rather than delaying an interactive writer or publishing a stale credential.
     package func updateIfAvailable(_ update: (inout CodexBarConfig) throws -> Bool) throws {

@@ -23,7 +23,7 @@ extension SettingsStore {
         affectsBackgroundWork: Bool,
         mutate: (inout CodexBarConfig) -> Void)
     {
-        guard !self.configLoading else { return }
+        guard !self.configLoading, !self.configLoadFailed else { return }
         var config = self.config
         mutate(&config)
         self.config = config.normalized()
@@ -66,7 +66,7 @@ extension SettingsStore {
         provider: UsageProvider,
         mutate: (inout ProviderConfig) -> Void)
     {
-        guard !self.configLoading else { return }
+        guard !self.configLoading, !self.configLoadFailed else { return }
         var config = self.config
         var entry = config.providerConfig(for: provider.instanceID) ?? ProviderConfig(id: provider.instanceID)
         mutate(&entry)
@@ -134,13 +134,24 @@ extension SettingsStore {
     {
         guard !self.configLoading else { return }
         do {
-            guard let loaded = try self.configStore.load() else { return }
+            guard let loaded = try self.configPersistenceCoordinator.load(self.configStore) else { return }
+            let wasLoadFailed = self.configLoadFailed
+            self.configLoadFailed = false
+            self.defaultsState.openAIWebAccessEnabled = Self.initializeOpenAIWebAccessPreference(
+                userDefaults: self.userDefaults, config: loaded, hadExistingConfig: true)
             self.applyExternalConfig(
                 loaded,
                 reason: "reload-\(reason)",
                 affectsBackgroundWork: affectsBackgroundWork,
                 origin: origin)
+            if wasLoadFailed, !Self.isRunningTests {
+                self.runInitialProviderDetectionIfNeeded()
+            }
         } catch {
+            self.configLoadFailed = true
+            self.configPersistWriteTask?.cancel()
+            self.configPersistTask?.cancel()
+            self.configPersistTask = nil
             CodexBarLog.logger(LogCategories.configStore).error("Failed to reload config: \(error)")
         }
     }
@@ -231,7 +242,7 @@ extension SettingsStore {
             await pending.value
             if self.configPersistTask == pending { break }
         }
-        guard !Task.isCancelled, !self.configLoading, isCurrent() else { return .stale }
+        guard !Task.isCancelled, !self.configLoading, !self.configLoadFailed, isCurrent() else { return .stale }
         do {
             var config = try self.configStore.load() ?? self.config
             let original = self.config
@@ -243,7 +254,11 @@ extension SettingsStore {
                 .applying(values, to: original)
             guard !ProviderPluginResultPolicy.matches(updated, original) else { return .unchanged }
             config.setProviderConfig(updated)
-            try Self.writeConfig(config, to: self.configStore, watcher: self.configFileWatcher)
+            try Self.writeConfig(
+                config,
+                to: self.configStore,
+                watcher: self.configFileWatcher,
+                permit: self.configPersistenceCoordinator.makeWritePermit())
             self.config = config.normalized()
             self.updateProviderState(config: self.config)
             self.bumpConfigRevision(reason: "plugin-settings", affectsBackgroundWork: false)
@@ -254,7 +269,7 @@ extension SettingsStore {
     }
 
     func schedulePersistConfig() {
-        guard !self.configLoading else { return }
+        guard !self.configLoading, !self.configLoadFailed else { return }
         self.configPersistTask?.cancel()
         #if DEBUG
         let persistSynchronously = Self.isRunningTests && !self._test_configPersistenceUsesDebounce
@@ -262,7 +277,11 @@ extension SettingsStore {
         let persistSynchronously = Self.isRunningTests
         #endif
         if persistSynchronously {
-            Self.persistConfig(self.config, to: self.configStore, watcher: self.configFileWatcher)
+            Self.persistConfig(
+                self.config,
+                to: self.configStore,
+                watcher: self.configFileWatcher,
+                permit: self.configPersistenceCoordinator.makeWritePermit())
             return
         }
         self.configPersistTask = Task { @MainActor in
@@ -276,7 +295,7 @@ extension SettingsStore {
     }
 
     func persistPendingConfigForTermination() -> Task<Void, Never>? {
-        guard let pending = self.configPersistTask else { return nil }
+        guard !self.configLoadFailed, let pending = self.configPersistTask else { return nil }
         pending.cancel()
         let save = self.persistConfigInBackground()
         self.configPersistTask = save
@@ -287,29 +306,50 @@ extension SettingsStore {
         let previousWrite = self.configPersistWriteTask
         let store = self.configStore
         let watcher = self.configFileWatcher
+        let permit = self.configPersistenceCoordinator.makeWritePermit()
         // Drain physical writes without needing the main actor, which may be in AppKit's quit loop.
         let write = Task.detached(priority: .utility) { [snapshot = self.config] in
             await previousWrite?.value
-            Self.persistConfig(snapshot, to: store, watcher: watcher)
+            guard !Task.isCancelled else { return }
+            Self.persistConfig(snapshot, to: store, watcher: watcher, permit: permit)
         }
         self.configPersistWriteTask = write
         return write
     }
 
     private nonisolated static func persistConfig(
-        _ config: CodexBarConfig, to store: CodexBarConfigStore, watcher: ConfigFileWatcher?)
+        _ config: CodexBarConfig,
+        to store: CodexBarConfigStore,
+        watcher: ConfigFileWatcher?,
+        permit: SettingsConfigPersistenceCoordinator.WritePermit)
     {
         do {
-            try self.writeConfig(config, to: store, watcher: watcher)
+            try self.writeConfig(config, to: store, watcher: watcher, permit: permit)
+        } catch is CancellationError {
+            // A reload superseded this physical writer; preserve the externally owned file.
         } catch {
             CodexBarLog.logger(LogCategories.configStore).error("Failed to persist config: \(error)")
         }
     }
 
     nonisolated static func writeConfig(
-        _ config: CodexBarConfig, to store: CodexBarConfigStore, watcher: ConfigFileWatcher?) throws
+        _ config: CodexBarConfig,
+        to store: CodexBarConfigStore,
+        watcher: ConfigFileWatcher?,
+        permit: SettingsConfigPersistenceCoordinator.WritePermit? = nil) throws
     {
         let data = try store.encodedData(for: config)
-        try ConfigFileWatcher.withAppWrite(data, watcher: watcher) { try store.saveEncodedData(data) }
+        var publicationLocked = false
+        defer { if publicationLocked { permit?.endPublication() } }
+        try ConfigFileWatcher.withAppWrite(data, watcher: watcher) {
+            try store.saveEncodedData(data) {
+                if let permit {
+                    guard permit.beginPublication() else { throw CancellationError() }
+                    publicationLocked = true
+                }
+                // Detect corruption even before its file-watch notification reaches the main actor.
+                _ = try store.load()
+            }
+        }
     }
 }
