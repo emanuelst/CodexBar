@@ -227,7 +227,11 @@ enum SessionEquivalentBurnEstimator {
                 groups[lastIndex].entries.append(entry)
                 groups[lastIndex].maximumUsedPercent = max(groups[lastIndex].maximumUsedPercent, entry.usedPercent)
             } else {
-                guard groups.last.map({ $0.resetsAt <= resetsAt }) ?? true else { return nil }
+                if groups.last.map({ $0.resetsAt > resetsAt }) ?? false {
+                    // A reset correction invalidates the older segment, not every later observation.
+                    // Never combine samples across that ambiguous boundary.
+                    groups.removeAll(keepingCapacity: true)
+                }
                 groups.append(SessionGroup(
                     resetsAt: resetsAt,
                     entries: [entry],
