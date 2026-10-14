@@ -419,7 +419,7 @@ final class SettingsStore {
         }
         self.ensureAlibabaProviderAutoEnabledIfNeeded()
         self.applyTokenCostDefaultIfNeeded()
-        if self.claudeUsageDataSource != .cli {
+        if !self.configLoadFailed, self.claudeUsageDataSource != .cli {
             if Self.isRunningTests {
                 self.claudeWebExtrasEnabled = false
             } else {

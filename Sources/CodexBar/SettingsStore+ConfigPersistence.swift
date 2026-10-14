@@ -144,8 +144,9 @@ extension SettingsStore {
                 reason: "reload-\(reason)",
                 affectsBackgroundWork: affectsBackgroundWork,
                 origin: origin)
-            if wasLoadFailed, !Self.isRunningTests {
-                self.runInitialProviderDetectionIfNeeded()
+            if wasLoadFailed {
+                self.ensureAlibabaProviderAutoEnabledIfNeeded()
+                if !Self.isRunningTests { self.runInitialProviderDetectionIfNeeded() }
             }
         } catch {
             self.configLoadFailed = true

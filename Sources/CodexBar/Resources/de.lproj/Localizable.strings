@@ -2620,3 +2620,4 @@
 "Applies to the OpenAI API key, not to token accounts." = "Gilt für den OpenAI-API-Schlüssel, nicht für Token-Konten.";
 
 "config_load_failed_title" = "Einstellungsdatei konnte nicht gelesen werden";
+"config_load_failed_guidance" = "Änderungen sind pausiert, um deine gespeicherten Einstellungen zu schützen. Repariere diese Datei und klicke dann auf „Neu laden“.";

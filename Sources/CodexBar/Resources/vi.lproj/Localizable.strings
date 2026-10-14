@@ -2623,3 +2623,4 @@
 "Applies to the OpenAI API key, not to token accounts." = "Áp dụng cho khóa API OpenAI, không áp dụng cho các tài khoản token.";
 
 "config_load_failed_title" = "Không thể đọc tệp cài đặt";
+"config_load_failed_guidance" = "Đã tạm dừng chỉnh sửa để bảo vệ cài đặt đã lưu. Hãy sửa tệp này, rồi nhấp Tải lại.";

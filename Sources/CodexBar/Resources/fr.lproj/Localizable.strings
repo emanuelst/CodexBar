@@ -2621,3 +2621,4 @@
 "Applies to the OpenAI API key, not to token accounts." = "S’applique à la clé API OpenAI, pas aux comptes de jeton.";
 
 "config_load_failed_title" = "Impossible de lire le fichier de réglages";
+"config_load_failed_guidance" = "Les modifications sont suspendues pour protéger vos réglages enregistrés. Réparez ce fichier, puis cliquez sur Recharger.";

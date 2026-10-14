@@ -7,6 +7,37 @@ import Testing
 @MainActor
 struct SettingsConfigTerminationTests {
     @Test(arguments: [false, true])
+    func `last moment external edits reject a staged app snapshot`(_ validRepair: Bool) async throws {
+        try await self.withSettings { settings in
+            settings.configFileWatcher?.stop()
+            let store = settings.configStore
+            let snapshot = settings.configSnapshot
+            var repair = snapshot
+            var entry = try #require(repair.providerConfig(for: .opencode))
+            entry.workspaceID = "synthetic-external-repair"
+            repair.setProviderConfig(entry)
+            let expected = try validRepair ? store.encodedData(for: repair) : Data("synthetic-corruption".utf8)
+            let edit: @Sendable (URL) throws -> Void = { _ in
+                try expected.write(to: store.fileURL, options: .atomic)
+            }
+            var rejected = false
+            do {
+                try CredentialFileWriter.$beforePublishForTesting.withValue(edit) {
+                    try SettingsStore.writeConfig(
+                        snapshot,
+                        to: store,
+                        watcher: nil,
+                        permit: settings.configPersistenceCoordinator.makeWritePermit())
+                }
+            } catch {
+                rejected = true
+            }
+            #expect(rejected)
+            #expect(try Data(contentsOf: store.fileURL) == expected)
+        }
+    }
+
+    @Test(arguments: [false, true])
     func `staged physical writer cannot replace corruption or a later repair`(_ repairImmediately: Bool) async throws {
         try await self.withSettings { settings in
             settings.configFileWatcher?.stop()

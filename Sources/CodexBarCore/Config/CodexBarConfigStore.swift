@@ -78,9 +78,24 @@ public struct CodexBarConfigStore: @unchecked Sendable {
     /// App writers can revalidate a snapshot after staging, while still holding the file lock.
     package func saveEncodedData(_ data: Data, beforePublish: @escaping () throws -> Void) throws {
         try self.withWriteLock {
-            try CredentialFileWriter.writePrivate(data, to: self.fileURL) { _ in
-                try beforePublish()
-            }
+            let expected = try self.destinationData()
+            try CredentialFileWriter.writePrivateCheckingDestination(
+                data,
+                to: self.fileURL,
+                validateDestinationBeforeRename: {
+                    guard try self.destinationData() == expected else { throw CancellationError() }
+                },
+                beforePublish: { _ in
+                    try beforePublish()
+                })
+        }
+    }
+
+    private func destinationData() throws -> Data? {
+        do {
+            return try Data(contentsOf: self.fileURL)
+        } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
+            return nil
         }
     }
 

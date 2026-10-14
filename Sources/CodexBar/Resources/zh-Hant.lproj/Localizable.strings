@@ -2600,3 +2600,4 @@
 "Applies to the OpenAI API key, not to token accounts." = "適用於 OpenAI API 金鑰，不適用於權杖帳戶。";
 
 "config_load_failed_title" = "無法讀取設定檔";
+"config_load_failed_guidance" = "為保護已儲存的設定，編輯已暫停。修復此檔案後，按一下重新載入。";

@@ -2625,3 +2625,4 @@
 "Applies to the OpenAI API key, not to token accounts." = "Token hesapları için değil, OpenAI API anahtarı için geçerlidir.";
 
 "config_load_failed_title" = "Ayar dosyası okunamadı";
+"config_load_failed_guidance" = "Kayıtlı ayarlarınızı korumak için düzenlemeler duraklatıldı. Bu dosyayı düzeltin, ardından Yeniden Yükle’ye tıklayın.";

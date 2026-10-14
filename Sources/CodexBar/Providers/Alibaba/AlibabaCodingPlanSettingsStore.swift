@@ -46,7 +46,8 @@ extension SettingsStore {
     func ensureAlibabaProviderAutoEnabledIfNeeded(
         environment: [String: String] = ProcessInfo.processInfo.environment)
     {
-        guard self.userDefaults.bool(forKey: Self.alibabaAutoEnableAppliedKey) == false else { return }
+        guard !self.configLoadFailed,
+              self.userDefaults.bool(forKey: Self.alibabaAutoEnableAppliedKey) == false else { return }
 
         let hasConfigToken = self.configSnapshot.providerConfig(for: .alibaba)?.sanitizedAPIKey != nil
         let shouldUseEnvironmentToken = !Self.isRunningTests || self.userDefaults === UserDefaults.standard

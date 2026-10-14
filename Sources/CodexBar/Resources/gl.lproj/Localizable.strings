@@ -2621,3 +2621,4 @@
 "Applies to the OpenAI API key, not to token accounts." = "Aplícase á clave da API de OpenAI, non ás contas de token.";
 
 "config_load_failed_title" = "Non se puido ler o ficheiro de configuración";
+"config_load_failed_guidance" = "As modificacións están pausadas para protexer a configuración gardada. Repara este ficheiro e preme Recargar.";

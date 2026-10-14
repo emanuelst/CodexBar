@@ -246,6 +246,16 @@ private struct ConfigLoadFailureBanner: View {
                 .foregroundStyle(.orange)
             VStack(alignment: .leading, spacing: 3) {
                 Text(L("config_load_failed_title")).font(.headline)
+                Text(L("config_load_failed_guidance"))
+                    .font(.callout)
+                HStack {
+                    Button(L("Show in Finder")) {
+                        NSWorkspace.shared.activateFileViewerSelecting([self.settings.configStore.fileURL])
+                    }
+                    Button(L("Reload")) {
+                        self.settings.reloadConfig(reason: "user-retry")
+                    }
+                }
                 Text(self.settings.configStore.fileURL.path)
                     .font(.callout)
                     .foregroundStyle(.secondary)

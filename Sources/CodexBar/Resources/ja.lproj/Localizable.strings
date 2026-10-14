@@ -2622,3 +2622,4 @@
 "Applies to the OpenAI API key, not to token accounts." = "OpenAI APIキーに適用されます。トークンアカウントには適用されません。";
 
 "config_load_failed_title" = "設定ファイルを読み込めませんでした";
+"config_load_failed_guidance" = "保存済みの設定を保護するため、編集を一時停止しています。このファイルを修復してから「再読み込み」をクリックしてください。";

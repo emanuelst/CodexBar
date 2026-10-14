@@ -10,6 +10,7 @@ struct CodexBarConfigMigratorTests {
     func `failed config load blocks edits until a repaired file reloads`() async throws {
         let suite = "CodexBarConfigMigratorTests-failed-load-manual-repair-\(UUID().uuidString)"
         let defaults = InMemoryUserDefaults()
+        defaults.set(true, forKey: "claudeWebExtrasEnabled")
         let configStore = testConfigStore(suiteName: suite)
         try FileManager.default.createDirectory(
             at: configStore.fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -36,6 +37,10 @@ struct CodexBarConfigMigratorTests {
             performInitialProviderDetection: false)
 
         #expect(settings.configLoadFailed)
+        #expect(settings.defaultsState.claudeWebExtrasEnabledRaw)
+        settings.config.setProviderConfig(ProviderConfig(id: .alibaba, enabled: false, apiKey: "synthetic-token"))
+        settings.ensureAlibabaProviderAutoEnabledIfNeeded(environment: [:])
+        #expect(!defaults.bool(forKey: "alibabaCodingPlanAutoEnableApplied"))
         #expect(!settings.openAIWebAccessEnabled)
         #expect(defaults.object(forKey: "openAIWebAccessEnabled") == nil)
         await settings.applyProviderDetection()
@@ -48,11 +53,19 @@ struct CodexBarConfigMigratorTests {
 
         var repaired = testConfigWithAllProvidersDisabled()
         repaired.setProviderConfig(ProviderConfig(id: .codex, enabled: false, cookieSource: .off))
-        repaired.setProviderConfig(ProviderConfig(id: .claude, enabled: false, apiKey: "synthetic-repaired-key"))
+        repaired.setProviderConfig(ProviderConfig(
+            id: .claude,
+            enabled: false,
+            source: .cli,
+            apiKey: "synthetic-repaired-key"))
+        repaired.setProviderConfig(ProviderConfig(id: .alibaba, enabled: false, apiKey: "synthetic-token"))
         try configStore.save(repaired)
         settings.reloadConfig(reason: "manual-repair")
 
         #expect(!settings.configLoadFailed)
+        #expect(settings.claudeWebExtrasEnabled)
+        #expect(defaults.bool(forKey: "alibabaCodingPlanAutoEnableApplied"))
+        #expect(settings.configSnapshot.providerConfig(for: .alibaba)?.enabled == true)
         #expect(defaults.object(forKey: "openAIWebAccessEnabled") as? Bool == false)
         #expect(!settings.providerDetectionCompleted)
         #expect(settings.configSnapshot.providerConfig(for: .claude)?.apiKey == "synthetic-repaired-key")
