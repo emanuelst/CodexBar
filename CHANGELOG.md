@@ -15,6 +15,8 @@
 
 ### Fixed
 
+- Usage forecasts: restore estimated session quotas and windows until reset when older history contains reset-time corrections.
+- Usage cards: consistently label subscription dates as “Plan renews” or “Plan expires” across all 23 locales.
 - Plugins: release temporary objects between QuickJS refreshes and free retired JavaScriptCore contexts and completed runtimes (#4512, #4486).
 - Claude: retain account emails from existing OAuth profile checks, even when the profile lacks organization details (#4493).
 - Droid: import sessions from Firefox Beta, Developer Edition, and Nightly, and continue past unavailable browser stores (#4461). Thanks @vincent-peng!
