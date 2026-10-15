@@ -145,6 +145,10 @@ extension SettingsStore {
                 affectsBackgroundWork: affectsBackgroundWork,
                 origin: origin)
             if wasLoadFailed {
+                // Match startup normalization once the repaired source is known; CLI keeps its opt-in.
+                if self.claudeUsageDataSource != .cli {
+                    self.defaultsState.claudeWebExtrasEnabledRaw = false
+                }
                 self.ensureAlibabaProviderAutoEnabledIfNeeded()
                 if !Self.isRunningTests { self.runInitialProviderDetectionIfNeeded() }
             }

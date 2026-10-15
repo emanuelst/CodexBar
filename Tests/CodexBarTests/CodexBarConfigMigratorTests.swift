@@ -5,9 +5,9 @@ import Testing
 
 @Suite(.serialized)
 struct CodexBarConfigMigratorTests {
-    @Test
+    @Test(arguments: [ProviderSourceMode.cli, .auto, .oauth])
     @MainActor
-    func `failed config load blocks edits until a repaired file reloads`() async throws {
+    func `failed config load blocks edits until a repaired file reloads`(source: ProviderSourceMode) async throws {
         let suite = "CodexBarConfigMigratorTests-failed-load-manual-repair-\(UUID().uuidString)"
         let defaults = InMemoryUserDefaults()
         defaults.set(true, forKey: "claudeWebExtrasEnabled")
@@ -56,14 +56,15 @@ struct CodexBarConfigMigratorTests {
         repaired.setProviderConfig(ProviderConfig(
             id: .claude,
             enabled: false,
-            source: .cli,
+            source: source,
             apiKey: "synthetic-repaired-key"))
         repaired.setProviderConfig(ProviderConfig(id: .alibaba, enabled: false, apiKey: "synthetic-token"))
         try configStore.save(repaired)
         settings.reloadConfig(reason: "manual-repair")
 
         #expect(!settings.configLoadFailed)
-        #expect(settings.claudeWebExtrasEnabled)
+        #expect(settings.claudeWebExtrasEnabled == (source == .cli))
+        #expect(settings.defaultsState.claudeWebExtrasEnabledRaw == (source == .cli))
         #expect(defaults.bool(forKey: "alibabaCodingPlanAutoEnableApplied"))
         #expect(settings.configSnapshot.providerConfig(for: .alibaba)?.enabled == true)
         #expect(defaults.object(forKey: "openAIWebAccessEnabled") as? Bool == false)

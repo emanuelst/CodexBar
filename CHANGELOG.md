@@ -4,7 +4,8 @@
 
 ### Fixed
 
-- Settings: preserve unreadable configuration files and make optional-usage controls consistent across Claude and Codex, with managed-account and locale coverage (#4509). Thanks @emanuelst!
+- Settings: preserve unreadable configuration files, provide safe reload guidance, and keep optional-usage controls consistent across Claude and Codex, including managed accounts (#4509). Thanks @emanuelst!
+- Codex: restore session-quota estimates and windows-until-reset forecasts when older history contains reset-time corrections (#4509). Thanks @emanuelst!
 - Plugins: release temporary objects between QuickJS refreshes and free retired JavaScriptCore contexts and completed runtimes (#4512, #4486).
 - Claude: retain account emails from existing OAuth profile checks, even when the profile lacks organization details (#4493).
 
