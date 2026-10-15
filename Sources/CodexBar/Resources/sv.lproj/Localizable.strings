@@ -651,8 +651,8 @@
 "show_provider_changelog_links_title" = "Visa länkar till leverantörers ändringsloggar";
 "highlight_menu_cards_on_hover_title" = "Markera menykort vid hovring";
 "show_provider_changelog_links_subtitle" = "Lägger till länkar till utgåvekommentarer för stödda CLI-baserade leverantörer i menyn.";
-"show_credits_extra_usage_title" = "Visa valfria krediter, utgifter och faktureringsdetaljer";
-"show_credits_extra_usage_subtitle" = "Gäller för alla leverantörer. Individuella visningsinställningar gäller fortfarande. Återställningskrediter för gränser och plandatum för Codex och Claude hanteras separat.";
+"show_credits_extra_usage_title" = "Visa krediter och extra användning";
+"show_credits_extra_usage_subtitle" = "Visa krediter och extra användning för leverantörer som stöds.";
 "multi_account_layout_title" = "Layout för flera konton";
 "multi_account_layout_subtitle" = "Välj segmenterad kontoväxling eller staplade kontokort.";
 "multi_account_layout_segmented" = "Segmenterad";
@@ -1935,7 +1935,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "Uppdatera profilen innan du uppdaterar OpenAI webbdata.";
 "Refreshing account status…" = "Uppdaterar kontostatus...";
 "Remaining budget compared with an ideal steady burn rate." = "Återstående budget jämfört med en idealisk jämn förbränningshastighet.";
-"Plan renews: %@" = "Abonnemanget förnyas: %@";
+"Renews: %@" = "Förnyar: %@";
 "Request quota" = "Begär Kvot";
 "Requesting login…" = "Begär inloggning...";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Krävs. Ange en vanlig API-nyckel eller en Management API-nyckel här. Hanteringsnycklar aktiverar även kontoaktivitet på den officiella OpenRouter API.";
@@ -2628,9 +2628,6 @@
 "Daily spend · %@" = "Dagliga utgifter · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Gäller det valda tokenkontot ”%@”. Varje konto behåller sina egna gränser.";
 "Applies to the OpenAI API key, not to token accounts." = "Gäller OpenAI API-nyckeln, inte tokenkonton.";
-
-"config_load_failed_title" = "Inställningsfilen kunde inte läsas";
-"config_load_failed_guidance" = "Ändringar är pausade för att skydda dina sparade inställningar. Reparera filen och klicka sedan på Läs in igen.";
 /* Claude Platform provider */
 "API credit" = "API-kredit";
 "Purchased credit" = "Köpt kredit";

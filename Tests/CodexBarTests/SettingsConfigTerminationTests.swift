@@ -1,84 +1,101 @@
 import AppKit
+import CodexBarCore
 import Foundation
 import Testing
 @testable import CodexBar
-@testable import CodexBarCore
 
 @MainActor
 struct SettingsConfigTerminationTests {
-    @Test(arguments: [false, true])
-    func `last moment external edits reject a staged app snapshot`(_ validRepair: Bool) async throws {
+    @Test
+    func `failed physical save preserves a repair until full reload`() async throws {
         try await self.withSettings { settings in
             settings.configFileWatcher?.stop()
-            let store = settings.configStore
-            let snapshot = settings.configSnapshot
-            var repair = snapshot
-            var entry = try #require(repair.providerConfig(for: .opencode))
-            entry.workspaceID = "synthetic-external-repair"
-            repair.setProviderConfig(entry)
-            let expected = try validRepair ? store.encodedData(for: repair) : Data("synthetic-corruption".utf8)
-            let edit: @Sendable (URL) throws -> Void = { _ in
-                try expected.write(to: store.fileURL, options: .atomic)
-            }
-            var rejected = false
-            do {
-                try CredentialFileWriter.$beforePublishForTesting.withValue(edit) {
-                    try SettingsStore.writeConfig(
-                        snapshot,
-                        to: store,
-                        watcher: nil,
-                        permit: settings.configPersistenceCoordinator.makeWritePermit())
-                }
-            } catch {
-                rejected = true
-            }
-            #expect(rejected)
-            #expect(try Data(contentsOf: store.fileURL) == expected)
+            settings[providerConfig: .fireworks, field: .apiKey] = "fixture-key"
+            try #require(await settings.savePluginSettings(
+                provider: .fireworks,
+                values: ["ACCOUNT_SLUG": "fixture"],
+                isCurrent: { true }) == .saved)
+            let corrupt = Data("synthetic-corrupt-config".utf8)
+            try corrupt.write(to: settings.configStore.fileURL)
+            settings.opencodeWorkspaceID = "edit-during-corruption"
+            await self.drainSaves(settings)
+            #expect(try Data(contentsOf: settings.configStore.fileURL) == corrupt)
+
+            var repaired = settings.configSnapshot
+            var entry = try #require(repaired.providerConfig(for: .opencode))
+            entry.workspaceID = "manually-repaired-workspace"
+            repaired.setProviderConfig(entry)
+            let expected = try settings.configStore.encodedData(for: repaired)
+            try expected.write(to: settings.configStore.fileURL, options: .atomic)
+            #expect(await settings.savePluginSettings(
+                provider: .fireworks,
+                values: ["ACCOUNT_SLUG": "fixture"],
+                isCurrent: { true }) == .unchanged)
+            settings.opencodeWorkspaceID = "stale-edit-before-reload"
+            await self.drainSaves(settings)
+            #expect(try Data(contentsOf: settings.configStore.fileURL) == expected)
+
+            settings.reloadConfig(reason: "physical-save-repair", origin: .localFile)
+            settings.opencodeWorkspaceID = "edit-after-reload"
+            await self.drainSaves(settings)
+            #expect(try settings.configStore.load()?.providerConfig(for: .opencode)?.workspaceID == "edit-after-reload")
+        }
+    }
+
+    @Test
+    func `account reload preserves the rest of the externally edited config`() async throws {
+        try await self.withSettings { settings in
+            settings.configFileWatcher?.stop()
+            var edited = settings.configSnapshot
+            var entry = try #require(edited.providerConfig(for: .opencode))
+            entry.workspaceID = "externally-edited-workspace"
+            edited.setProviderConfig(entry)
+            try settings.configStore.save(edited)
+
+            settings.reloadTokenAccounts()
+            await self.drainSaves(settings)
+
+            #expect(settings.opencodeWorkspaceID == "externally-edited-workspace")
+            #expect(try settings.configStore.load()?.providerConfig(for: .opencode)?.workspaceID
+                == "externally-edited-workspace")
         }
     }
 
     @Test(arguments: [false, true])
-    func `staged physical writer cannot replace corruption or a later repair`(_ repairImmediately: Bool) async throws {
+    func `failed secondary config reads preserve a repair until full reload`(_ pluginSave: Bool) async throws {
         try await self.withSettings { settings in
             settings.configFileWatcher?.stop()
-            let snapshot = settings.configSnapshot
-            let store = settings.configStore
-            let permit = settings.configPersistenceCoordinator.makeWritePermit()
-            let started = AsyncStream<Void>.makeStream()
-            let release = DispatchSemaphore(value: 0)
-            defer { release.signal() }
-            let beforeWrite: @Sendable (URL) throws -> Void = { _ in
-                started.continuation.yield(())
-                release.wait()
+            if pluginSave {
+                settings[providerConfig: .fireworks, field: .apiKey] = "fixture-key"
+                try #require(await settings.savePluginSettings(
+                    provider: .fireworks,
+                    values: ["ACCOUNT_SLUG": "fixture"],
+                    isCurrent: { true }) == .saved)
             }
-            let writer = Task.detached {
-                try CredentialFileWriter.$beforeWriteForTesting.withValue(beforeWrite) {
-                    try SettingsStore.writeConfig(snapshot, to: store, watcher: nil, permit: permit)
-                }
+            try Data("synthetic-corrupt-config".utf8).write(to: settings.configStore.fileURL)
+            if pluginSave {
+                #expect(await settings.savePluginSettings(
+                    provider: .fireworks,
+                    values: ["ACCOUNT_SLUG": "updated-fixture"],
+                    isCurrent: { true }) == .failed)
+            } else {
+                settings.reloadTokenAccounts()
             }
-            var iterator = started.stream.makeAsyncIterator()
-            _ = await iterator.next()
-            var expected = Data("synthetic-staged-write-corruption".utf8)
-            try expected.write(to: store.fileURL, options: .atomic)
-            settings.reloadConfig(reason: "staged-write-regression")
-            #expect(settings.configLoadFailed)
-            if repairImmediately {
-                var repair = snapshot
-                var entry = try #require(repair.providerConfig(for: .opencode))
-                entry.workspaceID = "manual-staged-write-repair"
-                repair.setProviderConfig(entry)
-                expected = try store.encodedData(for: repair)
-                try expected.write(to: store.fileURL, options: .atomic)
-                settings.reloadConfig(reason: "manual-staged-write-repair")
-                #expect(!settings.configLoadFailed)
-            }
-            release.signal()
-            let result = await writer.result
-            switch result {
-            case .success: Issue.record("Invalidated staged writer unexpectedly published")
-            case let .failure(error): #expect(error is CancellationError)
-            }
-            #expect(try Data(contentsOf: store.fileURL) == expected)
+
+            var repaired = settings.configSnapshot
+            var entry = try #require(repaired.providerConfig(for: .opencode))
+            entry.workspaceID = "manually-repaired-workspace"
+            repaired.setProviderConfig(entry)
+            let expected = try settings.configStore.encodedData(for: repaired)
+            try expected.write(to: settings.configStore.fileURL, options: .atomic)
+            settings.opencodeWorkspaceID = "stale-edit-before-reload"
+            await self.drainSaves(settings)
+            #expect(try Data(contentsOf: settings.configStore.fileURL) == expected)
+
+            settings.reloadConfig(reason: "secondary-read-repair", origin: .localFile)
+            settings.opencodeWorkspaceID = "edit-after-reload"
+            await self.drainSaves(settings)
+            #expect(try settings.configStore.load()?.providerConfig(for: .opencode)?.workspaceID == "edit-after-reload")
         }
     }
 
@@ -95,7 +112,6 @@ struct SettingsConfigTerminationTests {
             let corrupt = Data("synthetic-runtime-corruption".utf8)
             try corrupt.write(to: settings.configStore.fileURL)
             settings.reloadConfig(reason: "physical-writer-regression")
-            #expect(settings.configLoadFailed)
             var expected = corrupt
             if repairImmediately {
                 var repair = settings.configSnapshot
@@ -105,7 +121,6 @@ struct SettingsConfigTerminationTests {
                 expected = try settings.configStore.encodedData(for: repair)
                 try expected.write(to: settings.configStore.fileURL, options: .atomic)
                 settings.reloadConfig(reason: "manual-repair")
-                #expect(!settings.configLoadFailed)
             }
             fileManager.releaseWriter()
             await physicalWrite.value
@@ -123,22 +138,6 @@ struct SettingsConfigTerminationTests {
             let approved = try await self.configAtTerminationApproval(settings)
 
             #expect(approved.providerConfig(for: .claude)?.enabled == true)
-        }
-    }
-
-    @Test(arguments: [false, true])
-    func `rejected provider toggle preserves selected menu provider`(_ loading: Bool) async throws {
-        try await self.withSettings { settings in
-            let metadata = try #require(ProviderRegistry.shared.metadata[.claude])
-            settings.setProviderEnabled(provider: .claude, metadata: metadata, enabled: true)
-            settings.selectedMenuProvider = .claude
-            settings.configLoading = loading
-            settings.configLoadFailed = !loading
-
-            settings.setProviderEnabled(provider: .claude, metadata: metadata, enabled: false)
-
-            #expect(settings.selectedMenuProvider == .claude)
-            #expect(settings.isProviderEnabled(provider: .claude, metadata: metadata))
         }
     }
 

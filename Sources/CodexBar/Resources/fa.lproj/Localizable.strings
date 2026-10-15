@@ -658,8 +658,8 @@
 "show_provider_changelog_links_title" = "لینک های تغییرات ارائه دهنده را نمایش دهید";
 "highlight_menu_cards_on_hover_title" = "برجسته‌کردن کارت‌های منو هنگام قرارگیری نشانگر";
 "show_provider_changelog_links_subtitle" = "لینک های یادداشت های انتشار برای ارائه دهندگان پشتیبانی شده با پشتیبانی CLI به منو اضافه می شود.";
-"show_credits_extra_usage_title" = "نمایش اعتبارهای اختیاری، هزینه‌ها و جزئیات صورتحساب";
-"show_credits_extra_usage_subtitle" = "برای همهٔ ارائه‌دهندگان اعمال می‌شود. تنظیمات نمایش هر فرد همچنان اعمال می‌شوند. اعتبارهای بازنشانی حد و تاریخ‌های طرح Codex و Claude به‌طور مستقل کنترل می‌شوند.";
+"show_credits_extra_usage_title" = "نمایش اعتبارها + استفاده اضافی";
+"show_credits_extra_usage_subtitle" = "اعتبارها و استفادهٔ اضافی را برای ارائه‌دهندگان پشتیبانی‌شده نمایش دهید.";
 "multi_account_layout_title" = "چیدمان چندحسابی";
 "multi_account_layout_subtitle" = "کارت های حساب سوئیچینگ تقسیم شده یا کارت های حساب انباشته را انتخاب کنید.";
 "multi_account_layout_segmented" = "بخش بندی شده";
@@ -1940,7 +1940,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "قبل از بازخوانی داده های وب OpenAI، نمایه را بازخوانی کنید.";
 "Refreshing account status…" = "در حال تازه کردن وضعیت حساب…";
 "Remaining budget compared with an ideal steady burn rate." = "بودجه باقی مانده در مقایسه با نرخ سوزاندن ثابت ایده آل.";
-"Plan renews: %@" = "تمدید طرح: %@";
+"Renews: %@" = "تمدید: %@";
 "Request quota" = "درخواست سهمیه";
 "Requesting login…" = "در حال درخواست ورود…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "مورد نیاز. یک کلید معمولی API یا یک کلید مدیریت API را در اینجا وارد کنید. کلیدهای مدیریتی همچنین فعالیت حساب را در OpenRouter API رسمی فعال می کنند.";
@@ -2633,9 +2633,6 @@
 "Daily spend · %@" = "هزینهٔ روزانه · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "برای حساب توکن انتخاب‌شده «%@» اعمال می‌شود. هر حساب محدودیت‌های خودش را نگه می‌دارد.";
 "Applies to the OpenAI API key, not to token accounts." = "برای کلید API ‏OpenAI اعمال می‌شود، نه حساب‌های توکن.";
-
-"config_load_failed_title" = "خواندن فایل تنظیمات ممکن نیست";
-"config_load_failed_guidance" = "ویرایش‌ها برای محافظت از تنظیمات ذخیره‌شده متوقف شده‌اند. این فایل را اصلاح کنید، سپس روی بارگذاری مجدد کلیک کنید.";
 /* Claude Platform provider */
 "API credit" = "اعتبار API";
 "Purchased credit" = "اعتبار خریداری‌شده";

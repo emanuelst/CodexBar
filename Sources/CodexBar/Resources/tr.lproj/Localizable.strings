@@ -658,8 +658,8 @@
 "show_provider_changelog_links_title" = "Sağlayıcı değişiklik günlüğü bağlantılarını göster";
 "highlight_menu_cards_on_hover_title" = "Üzerine gelindiğinde menü kartlarını vurgula";
 "show_provider_changelog_links_subtitle" = "CLI kullanan desteklenen sağlayıcıların menüsüne sürüm notları bağlantıları ekler.";
-"show_credits_extra_usage_title" = "İsteğe bağlı kredileri, harcamaları ve faturalandırma ayrıntılarını göster";
-"show_credits_extra_usage_subtitle" = "Tüm sağlayıcılara uygulanır. Bireysel görünürlük ayarları hâlâ geçerlidir. Codex ve Claude sınır sıfırlama kredileri ile plan tarihleri ayrı ayrı yönetilir.";
+"show_credits_extra_usage_title" = "Krediler + ek kullanımı göster";
+"show_credits_extra_usage_subtitle" = "Desteklenen sağlayıcılar için kredileri ve ek kullanımı göster.";
 "multi_account_layout_title" = "Çoklu hesap düzeni";
 "multi_account_layout_subtitle" = "Bölümlü hesap seçiciyi veya alt alta hesap kartlarını seçin.";
 "multi_account_layout_segmented" = "Bölümlü";
@@ -1939,7 +1939,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "OpenAI web verilerini yenilemeden önce profili yenileyin.";
 "Refreshing account status…" = "Hesap durumu yenileniyor…";
 "Remaining budget compared with an ideal steady burn rate." = "İdeal sabit yazma hızıyla karşılaştırıldığında kalan bütçe.";
-"Plan renews: %@" = "Plan yenilenir: %@";
+"Renews: %@" = "Yeniler: %@";
 "Request quota" = "Kota talebinde bulunun";
 "Requesting login…" = "Giriş isteniyor…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Gerekli. Buraya normal bir API anahtarı veya Yönetim API anahtarı girin. Yönetim anahtarları ayrıca resmi OpenRouter API'deki hesap Etkinliğini de etkinleştirir.";
@@ -2632,9 +2632,6 @@
 "Daily spend · %@" = "Günlük harcama · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Seçili “%@” token hesabı için geçerlidir. Her hesap kendi sınırlarını korur.";
 "Applies to the OpenAI API key, not to token accounts." = "Token hesapları için değil, OpenAI API anahtarı için geçerlidir.";
-
-"config_load_failed_title" = "Ayar dosyası okunamadı";
-"config_load_failed_guidance" = "Kayıtlı ayarlarınızı korumak için düzenlemeler duraklatıldı. Bu dosyayı düzeltin, ardından Yeniden Yükle’ye tıklayın.";
 /* Claude Platform provider */
 "API credit" = "API kredisi";
 "Purchased credit" = "Satın alınan kredi";

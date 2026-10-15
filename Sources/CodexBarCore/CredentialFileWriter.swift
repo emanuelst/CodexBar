@@ -31,16 +31,6 @@ package enum CredentialFileWriter {
         to url: URL,
         beforePublish: ((URL) throws -> Void)? = nil) throws
     {
-        try self.writePrivateCheckingDestination(
-            data, to: url, validateDestinationBeforeRename: nil, beforePublish: beforePublish)
-    }
-
-    package static func writePrivateCheckingDestination(
-        _ data: Data,
-        to url: URL,
-        validateDestinationBeforeRename: (() throws -> Void)?,
-        beforePublish: ((URL) throws -> Void)? = nil) throws
-    {
         let fm = FileManager.default
         let directory = url.deletingLastPathComponent()
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -77,9 +67,6 @@ package enum CredentialFileWriter {
             try self.beforePublishForTesting?(staged)
             #endif
 
-            // Run destination validation after every staging callback, immediately before rename.
-            // POSIX rename is atomic replacement, not an atomic compare-and-swap with outside writers.
-            try validateDestinationBeforeRename?()
             // Atomic publish: rename(2) replaces any existing destination in one step.
             let renamed = staged.path.withCString { src in
                 url.path.withCString { dst in rename(src, dst) }

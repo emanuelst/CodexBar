@@ -649,8 +649,8 @@
 "show_provider_changelog_links_title" = "プロバイダの変更履歴リンクを表示";
 "highlight_menu_cards_on_hover_title" = "ホバー時にメニューカードをハイライト";
 "show_provider_changelog_links_subtitle" = "対応する CLI ベースのプロバイダのリリースノートへのリンクをメニューに追加します。";
-"show_credits_extra_usage_title" = "オプションのクレジット、支出、請求詳細を表示";
-"show_credits_extra_usage_subtitle" = "すべてのプロバイダーに適用されます。個別の表示設定も引き続き有効です。Codex と Claude のリミットリセットクレジットとプラン日は個別に制御されます。";
+"show_credits_extra_usage_title" = "クレジットと追加使用量を表示";
+"show_credits_extra_usage_subtitle" = "対応プロバイダーのクレジットと追加使用量を表示します。";
 "multi_account_layout_title" = "複数アカウントのレイアウト";
 "multi_account_layout_subtitle" = "セグメント式のアカウント切替か、積み重ね式のアカウントカードを選択します。";
 "multi_account_layout_segmented" = "セグメント";
@@ -1936,7 +1936,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "OpenAI Web データを更新する前に、プロファイルを更新してください。";
 "Refreshing account status…" = "アカウントのステータスを更新しています…";
 "Remaining budget compared with an ideal steady burn rate." = "理想的な安定した燃焼速度と比較した残りの予算。";
-"Plan renews: %@" = "プラン更新日: %@";
+"Renews: %@" = "更新: %@";
 "Request quota" = "リクエスト クォータ";
 "Requesting login…" = "ログインをリクエスト中…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "必須。ここに通常の API キーまたは管理 API キーを入力します。管理キーにより、公式 OpenRouter API でのアカウント アクティビティも有効になります。";
@@ -2629,9 +2629,6 @@
 "Daily spend · %@" = "日別の支出 · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "選択中のトークンアカウント「%@」に適用されます。各アカウントは独自の上限を保持します。";
 "Applies to the OpenAI API key, not to token accounts." = "OpenAI APIキーに適用されます。トークンアカウントには適用されません。";
-
-"config_load_failed_title" = "設定ファイルを読み込めませんでした";
-"config_load_failed_guidance" = "保存済みの設定を保護するため、編集を一時停止しています。このファイルを修復してから「再読み込み」をクリックしてください。";
 /* Claude Platform provider */
 "API credit" = "API クレジット";
 "Purchased credit" = "購入済みクレジット";

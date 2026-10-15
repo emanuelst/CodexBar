@@ -114,7 +114,7 @@ struct UsageStoreMenuCardModelTests {
     }
 
     @Test
-    func `settings catalogue override keeps the Codex synthetic credit lane as a gated row`() {
+    func `settings catalogue keeps the Codex credit lane while optional usage is off`() {
         let store = self.makeStore()
         store.settings.showOptionalCreditsAndExtraUsage = false
         let now = Date(timeIntervalSince1970: 1_700_000_000)
@@ -124,61 +124,31 @@ struct UsageStoreMenuCardModelTests {
             events: [],
             updatedAt: now,
             codexCreditLimit: CodexCreditLimitSnapshot(
-                used: 27,
-                limit: 100,
-                remainingPercent: 73,
-                resetsAt: nil,
-                updatedAt: now))
-
-        let rendered = UsageMenuCardView.Model.make(store.menuCardInput(
-            for: .codex,
-            context: .settingsAccount(.init(snapshot: snapshot, credits: credits))))
-        #expect(!rendered.metrics.contains { $0.id == "monthly" })
-
+                used: 27, limit: 100, remainingPercent: 73, resetsAt: nil, updatedAt: now))
+        let context = UsageMenuCardContext.settingsAccount(.init(snapshot: snapshot, credits: credits))
+        let rendered = UsageMenuCardView.Model.make(store.menuCardInput(for: .codex, context: context))
         let catalogue = UsageMenuCardView.Model.make(store.menuCardInput(
-            for: .codex,
-            context: .settingsAccount(.init(snapshot: snapshot, credits: credits)),
-            optionalUsageOverride: true))
-        #expect(catalogue.metrics.contains { $0.id == "monthly" && $0.isSyntheticCreditLane })
+            for: .codex, context: context, optionalUsageOverride: true))
+        #expect(!rendered.metrics.contains { $0.id == "monthly" })
         #expect(catalogue.usageItemDescriptors.contains {
             $0.id == .metric("monthly") && $0.requiresOptionalUsage
         })
         #expect(!store.settings.showOptionalCreditsAndExtraUsage)
     }
 
-    @Test(arguments: [ClaudeUsageDataSource.api, .auto, .cli, .web, .oauth])
-    func `prepaid availability follows the effective admin strategy`(_ source: ClaudeUsageDataSource) {
-        let store = self
-            .makeStore(environment: [ClaudeAdminAPISettingsReader.adminAPIKeyEnvironmentKey: "synthetic-admin-key"])
-        store.settings.claudeUsageDataSource = source
-        store.settings.claudeCookieSource = .manual
-        store.settings.claudeCookieHeader = "sessionKey=sk-ant-synthetic-cookie"
-        #expect(store.claudePrepaidExtraUsageAvailable == (source != .api && source != .auto))
-    }
-
     @Test
-    func `settings catalogue keeps the fetch-gated Claude extra usage row when available`() {
+    func `real monthly Codex quota is not marked as optional credits`() {
         let store = self.makeStore()
         store.settings.showOptionalCreditsAndExtraUsage = false
-        store.settings.claudeCookieSource = .off
-        let offCatalogue = UsageMenuCardView.Model.make(store.menuCardInput(
-            for: .claude, context: .settings, optionalUsageOverride: true))
-        #expect(!offCatalogue.usageItemDescriptors.contains { $0.id == .claudeExtraUsage })
-        #expect(!store.claudePrepaidExtraUsageAvailable)
-
-        // Availability is injected to test catalogue behavior without credential-shaped test data.
-        let availableCatalogue = UsageMenuCardView.Model.make(store.menuCardInput(
-            for: .claude,
-            context: .settings,
-            optionalUsageOverride: true,
-            claudePrepaidExtraUsageAvailableOverride: true))
-        #expect(availableCatalogue.usageItemDescriptors.contains {
-            $0.id == .claudeExtraUsage && $0.requiresOptionalUsage
+        let snapshot = UsageSnapshot(
+            primary: RateWindow(usedPercent: 27, windowMinutes: 43200, resetsAt: nil, resetDescription: nil),
+            secondary: nil,
+            updatedAt: Date())
+        let model = UsageMenuCardView.Model.make(store.menuCardInput(
+            for: .codex, context: .settingsAccount(.init(snapshot: snapshot))))
+        #expect(model.usageItemDescriptors.contains {
+            $0.id == .metric("monthly") && !$0.requiresOptionalUsage
         })
-        // The rendered settings card stays on the user's actual switch.
-        let rendered = store.menuCardModel(for: .claude, context: .settings)
-        #expect(rendered.providerCost == nil)
-        #expect(!store.settings.showOptionalCreditsAndExtraUsage)
     }
 
     @Test
@@ -287,17 +257,16 @@ struct UsageStoreMenuCardModelTests {
         #expect(store.planUtilizationHistoryRevision == revision)
     }
 
-    private func makeStore(environment: [String: String] = [:]) -> UsageStore {
+    private func makeStore() -> UsageStore {
         let settings = testSettingsStore(
             suiteName: "UsageStoreMenuCardModelTests",
             userDefaults: InMemoryUserDefaults(),
             keychainAccessPolicy: .init(setDisabled: { _ in }, isExplicitlyDisabled: { false }))
         let store = UsageStore(
-            fetcher: UsageFetcher(environment: environment),
+            fetcher: UsageFetcher(environment: [:]),
             browserDetection: BrowserDetection(cacheTTL: 0),
             settings: settings,
-            startupBehavior: .testing,
-            environmentBase: environment)
+            startupBehavior: .testing)
         store._cancelPlanUtilizationHistoryLoadForTesting()
         store.planUtilizationHistory = [:]
         return store

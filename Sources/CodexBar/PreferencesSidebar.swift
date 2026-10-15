@@ -19,7 +19,6 @@ struct SettingsSidebarView: View {
                 SettingsSidebarSortToggle(
                     isOn: self.$settings.providersSortedAlphabetically,
                     enabledOnly: self.$settings.providersEnabledOnly,
-                    canChangeOrder: self.canMutateConfig,
                     onRestore: self.restoreProviderOrder)
             }
             .padding(.horizontal, 8)
@@ -33,7 +32,7 @@ struct SettingsSidebarView: View {
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
 
-            if self.settings.canUndoProviderOrderChange, self.canMutateConfig {
+            if self.settings.canUndoProviderOrderChange {
                 HStack {
                     Text(L("Provider order updated"))
                     Spacer(minLength: 4)
@@ -74,7 +73,7 @@ struct SettingsSidebarView: View {
                 self.providerRow(provider)
             }
             .onMove { fromOffsets, toOffset in
-                guard self.canMutateConfig, self.canReorderProviders else { return }
+                guard self.canReorderProviders else { return }
                 if self.settings.moveVisibleProviders(
                     visibleProviders.map(\.instanceID), fromOffsets: fromOffsets, toOffset: toOffset)
                 {
@@ -108,10 +107,9 @@ struct SettingsSidebarView: View {
         SettingsSidebarProviderRow(
             provider: provider,
             store: self.store,
-            isEnabled: self.enabledBinding(for: provider),
-            canToggle: self.canMutateConfig)
+            isEnabled: self.enabledBinding(for: provider))
             .tag(SettingsPane.provider(provider.instanceID))
-            .moveDisabled(!self.canMutateConfig || !self.canReorderProviders)
+            .moveDisabled(!self.canReorderProviders)
     }
 
     private func restoreProviderOrder() {
@@ -163,16 +161,11 @@ struct SettingsSidebarView: View {
             && self.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    private var canMutateConfig: Bool {
-        !self.settings.configLoading && !self.settings.configLoadFailed
-    }
-
     private func enabledBinding(for provider: UsageProvider) -> Binding<Bool> {
         let meta = self.store.metadata(for: provider)
         return Binding(
             get: { self.settings.isProviderEnabled(provider: provider, metadata: meta) },
             set: { newValue in
-                guard self.canMutateConfig else { return }
                 self.settings.setProviderEnabled(provider: provider, metadata: meta, enabled: newValue)
             })
     }
@@ -223,7 +216,6 @@ struct SettingsSidebarProviderRow: View {
     let provider: UsageProvider
     @Bindable var store: UsageStore
     @Binding var isEnabled: Bool
-    let canToggle: Bool
 
     var body: some View {
         HStack(spacing: 8) {
@@ -265,7 +257,6 @@ struct SettingsSidebarProviderRow: View {
             Button(self.isEnabled ? L("Disable") : L("Enable")) {
                 self.isEnabled.toggle()
             }
-            .disabled(!self.canToggle)
         }
         .accessibilityLabel(self.accessibilityLabel)
     }
@@ -342,7 +333,6 @@ private struct SettingsSidebarSearchField: View {
 private struct SettingsSidebarSortToggle: View {
     @Binding var isOn: Bool
     @Binding var enabledOnly: Bool
-    let canChangeOrder: Bool
     let onRestore: () -> Void
 
     var body: some View {
@@ -357,7 +347,6 @@ private struct SettingsSidebarSortToggle: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(!self.canChangeOrder)
             .help(self.isOn
                 ? L("Sorted alphabetically (enabled first) — click to use your custom order")
                 : L("Sort providers alphabetically (enabled first)"))
@@ -368,7 +357,6 @@ private struct SettingsSidebarSortToggle: View {
                 Toggle(L("Only enabled providers"), isOn: self.$enabledOnly)
                 Divider()
                 Button(L("Restore default order"), action: self.onRestore)
-                    .disabled(!self.canChangeOrder)
                     .help(L("Also restores the provider order in the menu bar. Can be undone."))
             } label: {
                 Image(systemName: "chevron.down")

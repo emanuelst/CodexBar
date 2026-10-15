@@ -1940,7 +1940,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "Refresh the profile before refreshing OpenAI web data.";
 "Refreshing account status…" = "Refreshing account status…";
 "Remaining budget compared with an ideal steady burn rate." = "Remaining budget compared with an ideal steady burn rate.";
-"Plan renews: %@" = "Plan renews: %@";
+"Renews: %@" = "Renews: %@";
 "Request quota" = "Request quota";
 "Requesting login…" = "Requesting login…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API.";
@@ -2634,8 +2634,6 @@
 "Daily spend · %@" = "Daily spend · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Applies to the selected token account “%@”. Each account keeps its own limits.";
 "Applies to the OpenAI API key, not to token accounts." = "Applies to the OpenAI API key, not to token accounts.";
-"config_load_failed_title" = "Settings file could not be read";
-"config_load_failed_guidance" = "Edits are paused to protect your saved settings. Repair this file, then click Reload.";
 /* Claude Platform provider */
 "API credit" = "API credit";
 "Purchased credit" = "Purchased credit";

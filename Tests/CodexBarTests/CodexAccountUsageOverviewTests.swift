@@ -14,36 +14,67 @@ private actor OverviewFetchRecorder {
 @MainActor
 extension CodexAccountScopedRefreshTests {
     @Test
-    func `optional catalogue rows do not leak into managed account previews`() async throws {
-        try await self.withSelectedAccountRetentionFixture(sameEmail: true) { store, _, _ in
-            store.settings.showOptionalCreditsAndExtraUsage = false
-            let now = Date()
-            store.codexAccountSnapshots = store.codexAccountSnapshots.map { record in
-                let credits = CreditsSnapshot(
-                    remaining: 73,
-                    events: [],
-                    updatedAt: now,
-                    codexCreditLimit: CodexCreditLimitSnapshot(
-                        used: 27, limit: 100, remainingPercent: 73, resetsAt: nil, updatedAt: now))
-                let snapshot = UsageSnapshot(
-                    primary: nil,
-                    secondary: nil,
-                    updatedAt: now,
-                    identity: record.snapshot?.identity)
-                return CodexAccountUsageSnapshot(
-                    account: record.account,
-                    snapshot: snapshot,
-                    error: nil,
-                    sourceLabel: record.sourceLabel,
-                    credits: credits)
+    func `mixed monthly catalogue semantics are independent of account order`() async throws {
+        try await CodexAccountScopedRefreshTests()
+            .withSelectedAccountRetentionFixture(sameEmail: false) { store, _, _ in
+                store.settings.showOptionalCreditsAndExtraUsage = false
+                let now = Date()
+                store.codexAccountSnapshots = store.codexAccountSnapshots.enumerated().map { index, record in
+                    CodexAccountUsageSnapshot(
+                        account: record.account,
+                        snapshot: UsageSnapshot(
+                            primary: index == 0 ? RateWindow(
+                                usedPercent: 24, windowMinutes: 43200, resetsAt: nil, resetDescription: nil) : nil,
+                            secondary: nil,
+                            updatedAt: now),
+                        error: nil,
+                        sourceLabel: "synthetic",
+                        credits: index == 0 ? nil : CreditsSnapshot(
+                            remaining: 73,
+                            events: [],
+                            updatedAt: now,
+                            codexCreditLimit: CodexCreditLimitSnapshot(
+                                used: 27, limit: 100, remainingPercent: 73, resetsAt: nil, updatedAt: now)))
+                }
+                let overview = try #require(store.codexAccountUsageOverview(onRefresh: { _ in }))
+                let candidates = overview.rows.flatMap(\.usageItems).filter { $0.id == .metric("monthly") }
+                try #require(candidates.contains { $0.requiresOptionalUsage })
+                try #require(candidates.contains { !$0.requiresOptionalUsage })
+                for rows in [overview.rows, Array(overview.rows.reversed())] {
+                    let reordered = ProviderAccountUsageOverview(
+                        rows: rows,
+                        refreshLimit: overview.refreshLimit,
+                        canRefresh: overview.canRefresh,
+                        onRefresh: overview.onRefresh)
+                    // The settings pane keeps the first descriptor for each saved visibility ID.
+                    let monthly = try #require(reordered.usageItems.first { $0.id == .metric("monthly") })
+                    #expect(!monthly.requiresOptionalUsage)
+                    #expect(monthly.title == L("Monthly"))
+                }
             }
+    }
 
+    @Test
+    func `overview catalogue keeps hidden credit lanes without changing account previews`() async throws {
+        try await self.withSelectedAccountRetentionFixture(sameEmail: false) { store, _, _ in
+            store.settings.showOptionalCreditsAndExtraUsage = false
+            let now = Date(timeIntervalSince1970: 1_700_000_000)
+            store.codexAccountSnapshots = store.codexAccountSnapshots.map { record in
+                CodexAccountUsageSnapshot(
+                    account: record.account,
+                    snapshot: UsageSnapshot(primary: nil, secondary: nil, updatedAt: now),
+                    error: nil,
+                    sourceLabel: "fixture",
+                    credits: CreditsSnapshot(
+                        remaining: 0,
+                        events: [],
+                        updatedAt: now,
+                        codexCreditLimit: CodexCreditLimitSnapshot(
+                            used: 27, limit: 100, remainingPercent: 73, resetsAt: nil, updatedAt: now)))
+            }
             let overview = try #require(store.codexAccountUsageOverview(onRefresh: { _ in }))
-
             #expect(overview.rows.allSatisfy { !$0.model.metrics.contains { $0.id == "monthly" } })
-            #expect(overview.usageItems.contains {
-                $0.id == .metric("monthly") && $0.requiresOptionalUsage
-            })
+            #expect(overview.rows.allSatisfy { $0.usageItems.contains { $0.id == .metric("monthly") } })
         }
     }
 

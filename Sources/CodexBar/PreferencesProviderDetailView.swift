@@ -299,9 +299,7 @@ struct ProviderUsageItemVisibilitySettingsView: View {
                         })) {
                     VStack(alignment: .leading) {
                         Text(item.title)
-                        if item.requiresOptionalUsage,
-                           !self.settings.showOptionalCreditsAndExtraUsage
-                        {
+                        if item.requiresOptionalUsage, !self.settings.showOptionalCreditsAndExtraUsage {
                             Text(L("Hidden by the global optional credits, spending & billing setting."))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
@@ -309,10 +307,6 @@ struct ProviderUsageItemVisibilitySettingsView: View {
                     }
                 }
                 .toggleStyle(.checkbox)
-                .help(item.hasMixedOptionalUsage && !self.settings.showOptionalCreditsAndExtraUsage
-                    ? L("Credits") + ": "
-                    + L("Hidden by the global optional credits, spending & billing setting.")
-                    : "")
             }
 
             Button(L("Restore Defaults")) {

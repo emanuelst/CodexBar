@@ -51,8 +51,7 @@ extension UsageStore {
         for provider: UsageProvider,
         context: UsageMenuCardContext,
         now: Date = Date(),
-        optionalUsageOverride: Bool? = nil,
-        claudePrepaidExtraUsageAvailableOverride: Bool? = nil) -> UsageMenuCardView.Model.Input
+        optionalUsageOverride: Bool? = nil) -> UsageMenuCardView.Model.Input
     {
         let account = context.account
         let isSettings = context.isSettings
@@ -157,10 +156,6 @@ extension UsageStore {
             subtitleOverride: account?.subtitle,
             // Provider-specific by design: Kilo's menu explains its automatic source fallback.
             kiloAutoMode: !isSettings && provider == .kilo && self.settings.kiloUsageDataSource == .auto,
-            // Settings catalogues only: the menu never renders the optional-usage section list.
-            claudePrepaidExtraUsageAvailable: isSettings && provider == .claude
-                ? (claudePrepaidExtraUsageAvailableOverride ?? self.claudePrepaidExtraUsageAvailable)
-                : false,
             hidePersonalInfo: self.settings.hidePersonalInfo,
             weeklyPace: weeklyPace,
             sessionEquivalentForecast: forecast,
@@ -224,30 +219,5 @@ extension UsageStore {
               self.settings.quotaWarningEnabled(provider: provider, window: window)
         else { return [] }
         return self.settings.resolvedQuotaWarningThresholds(provider: provider, window: window)
-    }
-
-    /// Mirrors the Claude fetch gate: the prepaid Extra usage section only exists for
-    /// web-enriched accounts, so the settings catalogue keeps its row only for those.
-    var claudePrepaidExtraUsageAvailable: Bool {
-        let claude = self.settings.claudeSettingsSnapshot(tokenOverride: nil)
-        // Provider-specific by design: Admin API strategies do not fetch Claude prepaid balance.
-        guard claude.usageDataSource != .api else { return false }
-        if claude.usageDataSource == .auto {
-            let environment = ProviderRegistry.makeEnvironment(
-                base: self.environmentBase, provider: .claude, settings: self.settings, tokenOverride: nil)
-            guard ClaudeAdminAPISettingsReader.apiKey(environment: environment) == nil else { return false }
-        }
-        switch claude.cookieSource {
-        case .off:
-            return false
-        case .manual:
-            return ClaudeWebAPIFetcher.hasSessionKey(
-                cookieHeader: CookieHeaderNormalizer.normalize(claude.manualCookieHeader))
-        case .auto:
-            // Provider-specific by design: Claude prepaid Extra usage requires its cached web-session cookie.
-            return CookieHeaderCache.loadForDisplay(provider: .claude).map {
-                ClaudeWebAPIFetcher.hasSessionKey(cookieHeader: $0.cookieHeader)
-            } ?? false
-        }
     }
 }

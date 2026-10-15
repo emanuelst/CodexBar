@@ -114,8 +114,7 @@ struct SettingsSidebarStatusDotTests {
         let renderer = ImageRenderer(content: SettingsSidebarProviderRow(
             provider: .codex,
             store: store,
-            isEnabled: .constant(true),
-            canToggle: true)
+            isEnabled: .constant(true))
             .frame(width: 240)
             .padding(16)
             .environment(\.colorScheme, .light)

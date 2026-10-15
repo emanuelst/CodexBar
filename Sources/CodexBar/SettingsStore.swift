@@ -254,9 +254,11 @@ final class SettingsStore {
     @ObservationIgnored var config: CodexBarConfig
     @ObservationIgnored var configPersistTask: Task<Void, Never>?
     @ObservationIgnored var configPersistWriteTask: Task<Void, Never>?
-    @ObservationIgnored let configPersistenceCoordinator = SettingsConfigPersistenceCoordinator()
     @ObservationIgnored var configFileWatcher: ConfigFileWatcher?
     @ObservationIgnored var configLoading = false
+    @ObservationIgnored let configPersistenceCoordinator = SettingsConfigPersistenceCoordinator()
+    @ObservationIgnored var configNeedsReload = false
+
     @ObservationIgnored var cachedCodexAccountReconciliationSnapshot:
         CachedCodexAccountReconciliationSnapshot?
     @ObservationIgnored var cachedCodexAccountMenuProjection: CachedCodexAccountMenuProjection?
@@ -272,7 +274,6 @@ final class SettingsStore {
     var defaultsState: SettingsDefaultsState
     var providerSwitcherShortcuts = ProviderSwitcherShortcuts.defaults
     var configRevision: Int = 0
-    var configLoadFailed = false
     var providerDetailSettingsRevision: Int = 0
     var backgroundWorkSettingsRevision: Int = 0
     var costUsageSettingsRevision: UInt64 = 0
@@ -336,13 +337,7 @@ final class SettingsStore {
             _ = UserProviderPluginRegistry.refresh()
         }
         // Capture this before app-group/config migrations can create prior-installation state.
-        let hadExistingConfig: Bool
-        do {
-            hadExistingConfig = try configStore.load() != nil
-        } catch {
-            // A corrupt-but-present file is still a prior installation; do not run first-launch imports.
-            hadExistingConfig = true
-        }
+        let hadExistingConfig = (try? configStore.load()) != nil
         let hadPreviousInstallationState = hadExistingConfig || Self.hadPreviousAppLaunch(userDefaults: userDefaults)
         // Migration tests inject every dependency directly; ordinary settings tests must not discover user state.
         if !Self.isRunningTests {
@@ -381,23 +376,27 @@ final class SettingsStore {
             ampCookieStore: ampCookieStore,
             copilotTokenStore: copilotTokenStore,
             tokenAccountStore: tokenAccountStore)
-        var configLoadFailed = false
-        let config = CodexBarConfigMigrator.loadOrMigrate(
-            configStore: configStore,
-            userDefaults: userDefaults,
-            keychainAccessDisabled: keychainAccessPolicy.isExplicitlyDisabled(),
-            stores: legacyStores,
-            onConfigLoadFailure: { configLoadFailed = true })
-        if !configLoadFailed {
-            _ = Self.initializeOpenAIWebAccessPreference(
-                userDefaults: userDefaults, config: config, hadExistingConfig: hadExistingConfig)
+        let config: CodexBarConfig
+        do {
+            config = try CodexBarConfigMigrator.loadOrMigrate(
+                configStore: configStore,
+                userDefaults: userDefaults,
+                keychainAccessDisabled: keychainAccessPolicy.isExplicitlyDisabled(),
+                stores: legacyStores)
+        } catch {
+            config = CodexBarConfig.makeDefault().normalized()
+            self.configNeedsReload = true
+            CodexBarLog.logger(LogCategories.configMigration).error(
+                "Config load failed; preserving the file until it can be reloaded",
+                metadata: ["error": "\(error)"])
         }
+        _ = Self.initializeOpenAIWebAccessPreference(
+            userDefaults: userDefaults, config: config, hadExistingConfig: hadExistingConfig)
         self.userDefaults = userDefaults
         self.configStore = configStore
         self.antigravityOAuthCredentialsStore = antigravityOAuthCredentialsStore
         self.keychainAccessPolicy = keychainAccessPolicy
         self.config = config
-        self.configLoadFailed = configLoadFailed
         self.configLoading = true
         let defaultsState = Self.loadDefaultsState(
             userDefaults: userDefaults,
@@ -419,7 +418,7 @@ final class SettingsStore {
         }
         self.ensureAlibabaProviderAutoEnabledIfNeeded()
         self.applyTokenCostDefaultIfNeeded()
-        if !self.configLoadFailed, self.claudeUsageDataSource != .cli {
+        if self.claudeUsageDataSource != .cli {
             if Self.isRunningTests {
                 self.claudeWebExtrasEnabled = false
             } else {
@@ -427,9 +426,7 @@ final class SettingsStore {
             }
         }
         // Provider-specific by design: the legacy OpenAI web denial also governs Codex's CLI cookie source.
-        if !self.configLoadFailed, !self.openAIWebAccessEnabled,
-           self.providerConfig(for: .codex)?.cookieSource == nil
-        {
+        if !self.openAIWebAccessEnabled, self.providerConfig(for: .codex)?.cookieSource == nil {
             self.codexCookieSource = .off
         }
         self.keychainAccessPolicy.setDisabled(self.debugDisableKeychainAccess)
@@ -1092,7 +1089,6 @@ extension SettingsStore {
     }
 
     func setProviderEnabled(provider: UsageProvider, metadata _: ProviderMetadata, enabled: Bool) {
-        guard !self.configLoading, !self.configLoadFailed else { return }
         CodexBarLog.logger(LogCategories.settings).debug(
             "Provider toggle updated",
             metadata: ["provider": provider.rawValue, "enabled": "\(enabled)"])

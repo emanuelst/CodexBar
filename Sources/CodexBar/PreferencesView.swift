@@ -115,44 +115,38 @@ struct PreferencesView: View {
             Divider()
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                if self.settings.configLoadFailed {
-                    ConfigLoadFailureBanner(settings: self.settings)
+            self.detailView
+                .frame(
+                    maxWidth: SettingsPane.detailMaxWidth,
+                    maxHeight: .infinity,
+                    alignment: .topLeading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                // The panes hide their scroll background, and the window uses a transparent full-size
+                // titlebar, so without an opaque detail backing the grouped Form content renders through
+                // the titlebar region and overlaps the window title. Mirror the sidebar's material so the
+                // detail-side titlebar region has a stable backing in every pane and appearance. The
+                // zero-sized reader reports the window's titlebar height so the cover below matches it.
+                .background {
+                    SettingsDetailMaterial()
+                        .ignoresSafeArea()
+                        .overlay {
+                            SettingsTitlebarInsetReader(inset: self.$detailTitlebarInset)
+                                .frame(width: 0, height: 0)
+                        }
                 }
-                self.detailView
-                    .disabled(self.settings.configLoadFailed)
-            }
-            .frame(
-                maxWidth: SettingsPane.detailMaxWidth,
-                maxHeight: .infinity,
-                alignment: .topLeading)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            // The panes hide their scroll background, and the window uses a transparent full-size
-            // titlebar, so without an opaque detail backing the grouped Form content renders through
-            // the titlebar region and overlaps the window title. Mirror the sidebar's material so the
-            // detail-side titlebar region has a stable backing in every pane and appearance. The
-            // zero-sized reader reports the window's titlebar height so the cover below matches it.
-            .background {
-                SettingsDetailMaterial()
-                    .ignoresSafeArea()
-                    .overlay {
-                        SettingsTitlebarInsetReader(inset: self.$detailTitlebarInset)
-                            .frame(width: 0, height: 0)
-                    }
-            }
-            // Cover the transparent titlebar strip over the detail so scrolling Form content stays
-            // below it — matching the sidebar's clean top edge instead of riding up over the window
-            // title. The window draws its title above this cover.
-            .overlay(alignment: .top) {
-                SettingsDetailTitlebarCoverMaterial()
-                    .frame(height: self.detailTitlebarInset)
-                    .frame(maxWidth: .infinity)
-                    .ignoresSafeArea(edges: .top)
-                    .allowsHitTesting(false)
-            }
-            .overlay(alignment: .leading) {
-                self.sidebarResizeHandle
-            }
+                // Cover the transparent titlebar strip over the detail so scrolling Form content stays
+                // below it — matching the sidebar's clean top edge instead of riding up over the window
+                // title. The window draws its title above this cover.
+                .overlay(alignment: .top) {
+                    SettingsDetailTitlebarCoverMaterial()
+                        .frame(height: self.detailTitlebarInset)
+                        .frame(maxWidth: .infinity)
+                        .ignoresSafeArea(edges: .top)
+                        .allowsHitTesting(false)
+                }
+                .overlay(alignment: .leading) {
+                    self.sidebarResizeHandle
+                }
         }
         .frame(
             minWidth: SettingsPane.windowMinWidth,
@@ -241,36 +235,6 @@ struct PreferencesView: View {
 }
 
 @MainActor
-private struct ConfigLoadFailureBanner: View {
-    let settings: SettingsStore
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L("config_load_failed_title")).font(.headline)
-                Text(L("config_load_failed_guidance"))
-                    .font(.callout)
-                HStack {
-                    Button(L("Show in Finder")) {
-                        NSWorkspace.shared.activateFileViewerSelecting([self.settings.configStore.fileURL])
-                    }
-                    Button(L("Reload")) {
-                        self.settings.reloadConfig(reason: "user-retry")
-                    }
-                }
-                Text(self.settings.configStore.fileURL.path)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-            }
-            Spacer(minLength: 8)
-        }
-        .padding(12)
-    }
-}
-
 enum SettingsWindowSizing {
     static func enforceMinimumSize(_ window: NSWindow) {
         let toolbarHeight = max(0, window.frame.height - window.contentLayoutRect.height)

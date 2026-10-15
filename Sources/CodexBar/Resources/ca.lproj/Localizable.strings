@@ -635,8 +635,8 @@
 "show_provider_changelog_links_title" = "Mostreu els enllaços al registre de canvis del proveïdor";
 "highlight_menu_cards_on_hover_title" = "Ressalta les targetes del menú en passar-hi el cursor";
 "show_provider_changelog_links_subtitle" = "Afegiu al menú enllaços a les notes de versió dels proveïdors compatibles basats en CLI.";
-"show_credits_extra_usage_title" = "Mostra crèdits opcionals, despesa i detalls de facturació";
-"show_credits_extra_usage_subtitle" = "S'aplica a tots els proveïdors. Les configuracions de visibilitat individuals encara s'apliquen. Els crèdits de reinici de límits i les dates del pla de Codex i Claude es controlen per separat.";
+"show_credits_extra_usage_title" = "Mostreu crèdits + ús addicional";
+"show_credits_extra_usage_subtitle" = "Mostra els crèdits i l'ús addicional dels proveïdors compatibles.";
 "multi_account_layout_title" = "Disposició multicompte";
 "multi_account_layout_subtitle" = "Trieu el canvi de compte segmentat o targetes de compte apilades.";
 "multi_account_layout_segmented" = "Segmentat";
@@ -1940,7 +1940,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "Actualitzeu el perfil abans d'actualitzar les dades web de OpenAI.";
 "Refreshing account status…" = "S'està actualitzant l'estat del compte...";
 "Remaining budget compared with an ideal steady burn rate." = "Pressupost restant en comparació amb una taxa de combustió constant ideal.";
-"Plan renews: %@" = "El pla es renova: %@";
+"Renews: %@" = "Renova: %@";
 "Request quota" = "Demana quota";
 "Requesting login…" = "S'està sol·licitant l'inici de sessió...";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Obligatori. Introduïu una clau normal API o una clau de gestió API aquí. Les claus de gestió també permeten l'activitat del compte al OpenRouter API oficial.";
@@ -2631,9 +2631,6 @@
 "Daily spend · %@" = "Despesa diària · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "S’aplica al compte de token seleccionat «%@». Cada compte conserva els seus propis límits.";
 "Applies to the OpenAI API key, not to token accounts." = "S’aplica a la clau de l’API d’OpenAI, no als comptes de token.";
-
-"config_load_failed_title" = "No s'ha pogut llegir el fitxer de configuració";
-"config_load_failed_guidance" = "Les modificacions estan pausades per protegir els ajustos desats. Repara aquest fitxer i fes clic a Recarrega.";
 /* Claude Platform provider */
 "API credit" = "Crèdit d'API";
 "Purchased credit" = "Crèdit comprat";

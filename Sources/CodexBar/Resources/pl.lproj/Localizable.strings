@@ -660,8 +660,8 @@
 "show_provider_changelog_links_title" = "Pokaż linki do changelogów dostawców";
 "highlight_menu_cards_on_hover_title" = "Podświetlaj karty menu po najechaniu kursorem";
 "show_provider_changelog_links_subtitle" = "Dodaje linki do informacji o wydaniach dla obsługiwanych dostawców CLI w menu.";
-"show_credits_extra_usage_title" = "Pokaż opcjonalne kredyty, wydatki i szczegóły rozliczeń";
-"show_credits_extra_usage_subtitle" = "Dotyczy wszystkich dostawców. Pozostałe ustawienia widoczności nadal obowiązuje. Kredyty resetu limitów i daty planów Codex oraz Claude są zarządzane osobno.";
+"show_credits_extra_usage_title" = "Pokaż kredyty + dodatkowe użycie";
+"show_credits_extra_usage_subtitle" = "Pokazuje kredyty i dodatkowe użycie dla obsługiwanych dostawców.";
 "multi_account_layout_title" = "Układ wielu kont";
 "multi_account_layout_subtitle" = "Wybierz przełączanie segmentowe kont lub ułożone karty kont.";
 "multi_account_layout_segmented" = "Segmentowy";
@@ -1939,7 +1939,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "Odśwież profil przed odświeżeniem danych internetowych OpenAI.";
 "Refreshing account status…" = "Odświeżam stan konta…";
 "Remaining budget compared with an ideal steady burn rate." = "Pozostały budżet w porównaniu z idealnym, stałym współczynnikiem spalania.";
-"Plan renews: %@" = "Odnowienie planu: %@";
+"Renews: %@" = "Odnawia: %@";
 "Request quota" = "Zapytaj o Limit";
 "Requesting login…" = "Prośba o zalogowanie…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Wymagane. Wprowadź tutaj zwykły klucz API lub klucz zarządzania API. Klucze zarządzające umożliwiają także Aktywność konta na oficjalnym OpenRouter API.";
@@ -2632,9 +2632,6 @@
 "Daily spend · %@" = "Dzienne wydatki · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Dotyczy wybranego konta tokena „%@”. Każde konto zachowuje własne limity.";
 "Applies to the OpenAI API key, not to token accounts." = "Dotyczy klucza API OpenAI, a nie kont tokenów.";
-
-"config_load_failed_title" = "Nie można odczytać pliku ustawień";
-"config_load_failed_guidance" = "Zmiany są wstrzymane, aby chronić zapisane ustawienia. Napraw ten plik, a następnie kliknij Wczytaj ponownie.";
 /* Claude Platform provider */
 "API credit" = "Kredyt API";
 "Purchased credit" = "Kupiony kredyt";

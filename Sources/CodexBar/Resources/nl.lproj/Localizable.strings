@@ -652,8 +652,8 @@
 "show_provider_changelog_links_title" = "Toon provider changelog-links";
 "highlight_menu_cards_on_hover_title" = "Menukaarten markeren bij aanwijzen";
 "show_provider_changelog_links_subtitle" = "Voegt koppelingen naar release-opmerkingen voor ondersteunde CLI-ondersteunde providers toe aan het menu.";
-"show_credits_extra_usage_title" = "Optionele tegoeden, uitgaven en factureringsgegevens tonen";
-"show_credits_extra_usage_subtitle" = "Geldt voor alle providers. Individuele weergave-instellingen blijven gelden. De limiet-resettegoeden en plandata van Codex en Claude worden apart geregeld.";
+"show_credits_extra_usage_title" = "Toon credits + extra gebruik";
+"show_credits_extra_usage_subtitle" = "Toon tegoeden en extra gebruik voor ondersteunde providers.";
 "multi_account_layout_title" = "Indeling voor meerdere accounts";
 "multi_account_layout_subtitle" = "Kies voor gesegmenteerd wisselen tussen accounts of gestapelde accountkaarten.";
 "multi_account_layout_segmented" = "Gesegmenteerd";
@@ -1935,7 +1935,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "Vernieuw het profiel voordat u de OpenAI-webgegevens vernieuwt.";
 "Refreshing account status…" = "Accountstatus vernieuwen…";
 "Remaining budget compared with an ideal steady burn rate." = "Resterend budget vergeleken met een ideale stabiele brandsnelheid.";
-"Plan renews: %@" = "Abonnement wordt verlengd: %@";
+"Renews: %@" = "Vernieuwt: %@";
 "Request quota" = "Quotum aanvragen";
 "Requesting login…" = "Inloggen aanvragen…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Vereist. Voer hier een gewone API-sleutel of een Management API-sleutel in. Beheersleutels maken ook accountactiviteit mogelijk op de officiële OpenRouter API.";
@@ -2626,9 +2626,6 @@
 "Daily spend · %@" = "Dagelijkse uitgaven · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Geldt voor het geselecteerde tokenaccount ‘%@’. Elk account behoudt zijn eigen limieten.";
 "Applies to the OpenAI API key, not to token accounts." = "Geldt voor de OpenAI API-sleutel, niet voor tokenaccounts.";
-
-"config_load_failed_title" = "Instellingenbestand kan niet worden gelezen";
-"config_load_failed_guidance" = "Wijzigingen zijn gepauzeerd om je opgeslagen instellingen te beschermen. Herstel dit bestand en klik op Opnieuw laden.";
 /* Claude Platform provider */
 "API credit" = "API-tegoed";
 "Purchased credit" = "Gekocht tegoed";

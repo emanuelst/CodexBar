@@ -651,8 +651,8 @@
 "show_provider_changelog_links_title" = "顯示提供者版本資訊連結";
 "highlight_menu_cards_on_hover_title" = "滑鼠停留時反白選單卡片";
 "show_provider_changelog_links_subtitle" = "在選單中為支援的 CLI 提供者新增發行說明連結。";
-"show_credits_extra_usage_title" = "顯示選用額度、支出和帳單詳情";
-"show_credits_extra_usage_subtitle" = "適用於所有供應商。單獨的可見性設定仍然有效。Codex 和 Claude 的限額重置額度與計畫日期單獨控制。";
+"show_credits_extra_usage_title" = "顯示額度 + 額外使用量";
+"show_credits_extra_usage_subtitle" = "顯示支援的供應商的額度和額外用量。";
 "multi_account_layout_title" = "多帳號版面配置";
 "multi_account_layout_subtitle" = "選擇分段帳號切換或堆疊帳號卡片。";
 "multi_account_layout_segmented" = "分段";
@@ -1927,7 +1927,7 @@
 "Refresh budgets" = "重新整理預算";
 "Refreshing account status…" = "正在刷新帳號狀態...";
 "Remaining budget compared with an ideal steady burn rate." = "比較剩餘額度與理想的均勻使用速度。";
-"Plan renews: %@" = "方案續訂時間：%@";
+"Renews: %@" = "續訂時間：%@";
 "Request quota" = "請求 配額";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "必填。在此輸入常規 API 金鑰或管理 API 金鑰。管理金鑰還可以啟用官方 OpenRouter API 上的帳號活動。";
 "Reset: %@" = "重置：%@";
@@ -2607,9 +2607,6 @@
 "Daily spend · %@" = "每日支出 · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "適用於所選權杖帳戶「%@」。每個帳戶保留各自的限制。";
 "Applies to the OpenAI API key, not to token accounts." = "適用於 OpenAI API 金鑰，不適用於權杖帳戶。";
-
-"config_load_failed_title" = "無法讀取設定檔";
-"config_load_failed_guidance" = "為保護已儲存的設定，編輯已暫停。修復此檔案後，按一下重新載入。";
 /* Claude Platform provider */
 "API credit" = "API 額度";
 "Purchased credit" = "已購買額度";

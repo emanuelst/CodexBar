@@ -639,8 +639,8 @@
 "show_provider_changelog_links_title" = "Mostrar enlaces al registro de cambios del proveedor";
 "highlight_menu_cards_on_hover_title" = "Resaltar las tarjetas del menú al pasar el cursor";
 "show_provider_changelog_links_subtitle" = "Añade al menú enlaces a las notas de versión de los proveedores compatibles basados en CLI.";
-"show_credits_extra_usage_title" = "Mostrar créditos opcionales, gastos y detalles de facturación";
-"show_credits_extra_usage_subtitle" = "Se aplica a todos los proveedores. Los ajustes individuales de visibilidad siguen aplicándose. Los créditos de restablecimiento de límites y las fechas de plan de Codex y Claude se controlan por separado.";
+"show_credits_extra_usage_title" = "Mostrar créditos + uso adicional";
+"show_credits_extra_usage_subtitle" = "Muestra créditos y uso adicional para los proveedores compatibles.";
 "multi_account_layout_title" = "Diseño multicuenta";
 "multi_account_layout_subtitle" = "Elige cambio de cuenta segmentado o tarjetas de cuenta apiladas.";
 "multi_account_layout_segmented" = "Segmentado";
@@ -1934,7 +1934,7 @@
 "Refresh the profile before refreshing OpenAI web data." = "Actualice el perfil antes de actualizar los datos web de OpenAI.";
 "Refreshing account status…" = "Actualizando el estado de la cuenta...";
 "Remaining budget compared with an ideal steady burn rate." = "Presupuesto restante en comparación con una tasa de consumo constante ideal.";
-"Plan renews: %@" = "El plan se renueva: %@";
+"Renews: %@" = "Renueva: %@";
 "Request quota" = "Solicitar Cuota";
 "Requesting login…" = "Solicitando iniciar sesión…";
 "Required. Enter a regular API key or a Management API key here. Management keys also enable account Activity on the official OpenRouter API." = "Requerido. Ingrese aquí una clave API normal o una clave de administración API. Las claves de administración también habilitan la actividad de la cuenta en el OpenRouter API oficial.";
@@ -2627,9 +2627,6 @@
 "Daily spend · %@" = "Gasto diario · %@";
 "Applies to the selected token account “%@”. Each account keeps its own limits." = "Se aplica a la cuenta de token seleccionada «%@». Cada cuenta conserva sus propios límites.";
 "Applies to the OpenAI API key, not to token accounts." = "Se aplica a la clave de la API de OpenAI, no a las cuentas de token.";
-
-"config_load_failed_title" = "No se pudo leer el archivo de ajustes";
-"config_load_failed_guidance" = "Los cambios están pausados para proteger tus ajustes guardados. Repara este archivo y pulsa Recargar.";
 /* Claude Platform provider */
 "API credit" = "Crédito de API";
 "Purchased credit" = "Crédito comprado";

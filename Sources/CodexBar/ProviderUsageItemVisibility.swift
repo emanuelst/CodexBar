@@ -36,28 +36,6 @@ struct ProviderUsageItemDescriptor: Identifiable, Equatable, Sendable {
     let id: ProviderUsageItemID
     let title: String
     var requiresOptionalUsage: Bool = false
-    var hasMixedOptionalUsage: Bool = false
-
-    /// One saved visibility ID can cover both an ordinary quota and an optional credit lane.
-    /// Aggregate that meaning without letting account order choose the global-setting warning.
-    static func merging(_ descriptors: [Self]) -> [Self] {
-        let groups = Dictionary(grouping: descriptors, by: \.id)
-        var seen: Set<ProviderUsageItemID> = []
-        return descriptors.compactMap { item in
-            guard seen.insert(item.id).inserted, let group = groups[item.id] else { return nil }
-            let mixed = group.contains(where: \.hasMixedOptionalUsage)
-                || (group.contains(where: \.requiresOptionalUsage)
-                    && group.contains { !$0.requiresOptionalUsage })
-            let existingMixedTitles = group.filter(\.hasMixedOptionalUsage).map(\.title)
-            let title = existingMixedTitles.min()
-                ?? (mixed ? group.filter { !$0.requiresOptionalUsage }.map(\.title).min() ?? item.title : item.title)
-            return Self(
-                id: item.id,
-                title: title,
-                requiresOptionalUsage: group.allSatisfy(\.requiresOptionalUsage),
-                hasMixedOptionalUsage: mixed)
-        }
-    }
 }
 
 extension ProviderUsageItemID {
@@ -177,14 +155,6 @@ extension UsageMenuCardView.Model {
            cost.title == L("Extra usage") || cost.title == L("Credits")
         {
             descriptors.append(.init(id: .claudeExtraUsage, title: cost.title, requiresOptionalUsage: true))
-        }
-        // Provider-specific by design: Claude prepaid Extra usage keeps a default-visible settings row
-        // for web-enriched accounts while the global switch suppresses its balance fetch.
-        if self.provider == .claude,
-           self.claudePrepaidExtraUsageAvailable,
-           !descriptors.contains(where: { $0.id == .claudeExtraUsage })
-        {
-            descriptors.append(.init(id: .claudeExtraUsage, title: L("Extra usage"), requiresOptionalUsage: true))
         }
 
         var seen = Set<ProviderUsageItemID>()

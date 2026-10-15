@@ -28,26 +28,22 @@ extension UsageStore {
             let error = PersonalInfoRedactor.redactEmails(
                 in: followedError ?? CodexUIErrorMapper.userFacingMessage(record?.error),
                 isEnabled: self.settings.hidePersonalInfo)
-            let accountContext = UsageMenuCardContext.Account(
+            let context = UsageMenuCardContext.settingsAccount(.init(
                 snapshot: record?.snapshot,
                 error: error,
                 info: AccountInfo(email: account.email, plan: nil),
                 privacyOrdinal: ordinals[account.id].flatMap { PersonalInfoRedactor.AccountOrdinal($0) },
                 sourceLabel: sourceLabel,
-                credits: record?.credits)
-            var model = UsageMenuCardView.Model.make(self.menuCardInput(
-                for: .codex,
-                context: .settingsAccount(accountContext)))
-            let catalogueModel = UsageMenuCardView.Model.make(self.menuCardInput(
-                for: .codex,
-                context: .settingsAccount(accountContext),
-                optionalUsageOverride: true))
+                credits: record?.credits))
+            var model = UsageMenuCardView.Model.make(self.menuCardInput(for: .codex, context: context))
+            var catalogue = UsageMenuCardView.Model.make(self.menuCardInput(
+                for: .codex, context: context, optionalUsageOverride: true))
             if ownsLiveUsage {
                 // Keep authorized dashboard extras on their owner; sibling cards never read live adjuncts.
-                let liveModel = UsageMenuCardView.Model.make(self.menuCardInput(
-                    for: .codex,
-                    context: .settings))
-                model.metrics += liveModel.metrics.filter { $0.id == "code-review" }
+                let liveModel = UsageMenuCardView.Model.make(self.menuCardInput(for: .codex, context: .settings))
+                let metrics = liveModel.metrics.filter { $0.id == "code-review" }
+                model.metrics += metrics
+                catalogue.metrics += metrics
             }
             return ProviderAccountUsageOverview.Row(
                 id: account.id,
@@ -55,7 +51,7 @@ extension UsageStore {
                 isFollowed: isFollowed,
                 isSystem: account.id == projection.liveVisibleAccountID,
                 model: model.applyingUsageItemVisibility(hiddenItemIDs: self.settings.hiddenUsageItemIDs(for: .codex)),
-                usageItems: catalogueModel.usageItemDescriptors,
+                usageItems: catalogue.usageItemDescriptors,
                 updatedAt: record?.snapshot?.updatedAt,
                 sourceLabel: sourceLabel,
                 error: error,

@@ -46,13 +46,13 @@ struct ProviderUsageItemVisibilityTests {
     func `claude independently selects resets extra usage and subscription without losing quota notes`() {
         var model = Self.model(provider: .claude, metricIDs: ["primary", "secondary"], showsResetCredits: true)
         model.providerCost = .init(title: "Extra usage", percentUsed: 10, spendLine: "$1 / $10", percentLine: nil)
-        model.subscriptionNotes = ["Plan renews: Nov 5, 2026"]
-        model.usageNotes = ["Usage estimate", "Plan renews: Nov 5, 2026"]
+        model.subscriptionNotes = ["Renews: Nov 5, 2026"]
+        model.usageNotes = ["Usage estimate", "Renews: Nov 5, 2026"]
         let items = model.usageItemDescriptors
         #expect(items.contains { $0.id == .claudeResetCredits && !$0.requiresOptionalUsage })
         #expect(items.contains { $0.id == .claudeExtraUsage && $0.requiresOptionalUsage })
         #expect(items.contains { $0.id == .subscription && !$0.requiresOptionalUsage })
-        #expect(model.quotaSubscriptionNotes == ["Plan renews: Nov 5, 2026"])
+        #expect(model.quotaSubscriptionNotes == ["Renews: Nov 5, 2026"])
         #expect(model.supplementalUsageNotes == ["Usage estimate"])
 
         let hidden = model.applyingUsageItemVisibility(hiddenItemIDs: [.claudeExtraUsage, .subscription])
@@ -68,22 +68,10 @@ struct ProviderUsageItemVisibilityTests {
     }
 
     @Test
-    func `codex synthetic credit lane is gated while a real monthly quota window is not`() {
-        // A synthetic credit-limit lane (no window) follows the global optional-usage switch…
-        let synthetic = Self.model(provider: .codex, metricIDs: ["monthly"], monthlyIsSyntheticCreditLane: true)
-        #expect(synthetic.usageItemDescriptors.contains {
-            $0.id == .metric("monthly") && $0.requiresOptionalUsage
-        })
-        // …while a real 30-day quota window keeps its row while the global switch is off.
-        let realWindow = Self.model(provider: .codex, metricIDs: ["monthly"])
-        #expect(realWindow.usageItemDescriptors.contains {
-            $0.id == .metric("monthly") && !$0.requiresOptionalUsage
-        })
-        // A stopped-reporting placeholder has no window data and keeps the conservative gated note.
-        let placeholder = Self.model(provider: .codex, metricIDs: ["primary"])
-            .usageItemDescriptors(includingHidden: [.metric("monthly")])
-        #expect(placeholder.last?.id == .metric("monthly"))
-        #expect(placeholder.last?.requiresOptionalUsage == true)
+    func `new visibility controls retain recognizable unavailable labels`() {
+        #expect(ProviderUsageItemID.claudeResetCredits.unreportedTitle(for: .claude) == "Limit Reset Credits")
+        #expect(ProviderUsageItemID.claudeExtraUsage.unreportedTitle(for: .claude) == "Extra usage")
+        #expect(ProviderUsageItemID.subscription.unreportedTitle(for: .codex) == "Plan renewal / expiry")
     }
 
     @Test

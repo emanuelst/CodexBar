@@ -838,36 +838,6 @@ struct CodexConsumerProjectionTests {
         #expect(store.codexMenuBarMetricWindow(snapshot: snapshot, now: now) == nil)
     }
 
-    @Test
-    func `catalogue override lists the synthetic credit lane while the rendered card follows the switch`() {
-        let store = self.makeStore(suite: "CodexConsumerProjectionTests-catalogue-override")
-        store.settings.showOptionalCreditsAndExtraUsage = false
-        let now = Date(timeIntervalSince1970: 1_700_000_000)
-        store._setSnapshotForTesting(UsageSnapshot(primary: nil, secondary: nil, updatedAt: now), provider: .codex)
-        store.credits = CreditsSnapshot(
-            remaining: 0,
-            events: [],
-            updatedAt: now,
-            codexCreditLimit: CodexCreditLimitSnapshot(
-                used: 27,
-                limit: 100,
-                remainingPercent: 73,
-                resetsAt: nil,
-                updatedAt: now))
-
-        // The rendered surface follows the user's actual global switch.
-        let rendered = store.codexConsumerProjection(surface: .menuBar, now: now)
-        #expect(rendered.visibleRateLanes.isEmpty)
-        #expect(store.codexMenuBarMetricWindow(
-            snapshot: UsageSnapshot(primary: nil, secondary: nil, updatedAt: now),
-            now: now) == nil)
-
-        // The settings catalogue override keeps the account's credit lane listable.
-        let catalogue = store.codexConsumerProjection(surface: .menuBar, optionalUsageOverride: true, now: now)
-        #expect(catalogue.visibleRateLanes == [.monthly])
-        #expect(catalogue.rateWindow(for: .monthly)?.usedPercent == 27)
-    }
-
     private func makeStore(suite: String) -> UsageStore {
         let defaults = UserDefaults(suiteName: suite)!
         defaults.removePersistentDomain(forName: suite)
