@@ -149,6 +149,12 @@ extension SettingsStore {
                 if self.claudeUsageDataSource != .cli {
                     self.defaultsState.claudeWebExtrasEnabledRaw = false
                 }
+                CodexBarLog.logger(LogCategories.configStore).info(
+                    "Repaired configuration loaded",
+                    metadata: [
+                        "claudeUsageSource": self.claudeUsageDataSource.rawValue,
+                        "claudeWebExtras": self.claudeWebExtrasEnabled ? "1" : "0",
+                    ])
                 self.ensureAlibabaProviderAutoEnabledIfNeeded()
                 if !Self.isRunningTests { self.runInitialProviderDetectionIfNeeded() }
             }

@@ -126,6 +126,22 @@ struct SettingsConfigTerminationTests {
         }
     }
 
+    @Test(arguments: [false, true])
+    func `rejected provider toggle preserves selected menu provider`(_ loading: Bool) async throws {
+        try await self.withSettings { settings in
+            let metadata = try #require(ProviderRegistry.shared.metadata[.claude])
+            settings.setProviderEnabled(provider: .claude, metadata: metadata, enabled: true)
+            settings.selectedMenuProvider = .claude
+            settings.configLoading = loading
+            settings.configLoadFailed = !loading
+
+            settings.setProviderEnabled(provider: .claude, metadata: metadata, enabled: false)
+
+            #expect(settings.selectedMenuProvider == .claude)
+            #expect(settings.isProviderEnabled(provider: .claude, metadata: metadata))
+        }
+    }
+
     @Test
     func `quit persists the latest coalesced workspace edit`() async throws {
         try await self.withSettings { settings in
